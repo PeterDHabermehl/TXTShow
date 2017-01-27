@@ -7,10 +7,13 @@ from TouchStyle import *
 from threading import Timer
 from auxiliaries import *
 
-if TouchStyle_version<1.2:
-     print("TouchStyle >= v1.2 not found!")
-     exit(1)
-
+try:
+    if TouchStyle_version<1.2:
+        print("TouchStyle >= v1.2 not found!")
+except:
+    print("TouchStyle_version not found!")
+    TouchStyle_version=0
+    
 local = os.path.dirname(os.path.realpath(__file__)) + "/"
 icondir = local + "icons/"
 picsdir = local + "pics/"
@@ -43,17 +46,25 @@ class FtcGuiApplication(TouchApplication):
         
         self.window.show()
         
-        msg=TouchMessageBox("Full load", None)
-        msg.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus aliquet egestas elit, et lacinia odio convallis ut."+"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus aliquet egestas elit, et lacinia odio convallis ut.")
-        msg.addPixmap(QPixmap(icondir + "camera-web.png"))
+        #name="Olaf"
+        #msg=TouchAuxRequestText("Name:","Bitte Name eingeben:",name,"Okay")
+        #title:str,message:str,initval:int,button:str,minval,maxval
+        #msg=TouchAuxRequestInteger("Zahl:","Geschwindigkeit:",5,-10,10,"O-kay")
+        #title:str,message:str,items,inititem,button:str
+        #msg=TouchAuxListRequester("List:","Select:",["Hund","Katz","Maus","Jan","Jenny"],"Jan","Wau")
+        #print(msg.exec_())
+        #exit()
+        #msg=TouchAuxMessageBox("Full load", None)
+        #msg.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus aliquet egestas elit, et lacinia odio convallis ut."+"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus aliquet egestas elit, et lacinia odio convallis ut.")
+        #msg.addPixmap(QPixmap(icondir + "camera-web.png"))
         #msg.setPixmapBelow()
-        msg.setTextSize(3)
-        msg.addConfirm()
-        msg.setCancelButton()
-        msg.setPosButton("really")
-        msg.setNegButton("cool")
-        msg.buttonsVertical(False)
-        print(msg.exec_())
+        #msg.setTextSize(2)
+        #msg.addConfirm()
+        #msg.setCancelButton()
+        #msg.setPosButton("really")
+        #msg.setNegButton("cool")
+        #msg.buttonsVertical(False)
+        #print(msg.exec_())
         
         self.timer.start(self.timerdelay)
         self.on_timer() # erstes Bild laden!
@@ -91,6 +102,7 @@ class FtcGuiApplication(TouchApplication):
             self.paint_zoom()        
                 
         self.fw_dial.setValue(self.currpic+1)
+        self.album.setText(self.currdir)
     
     def paint_zoom(self):
         if not self.allowZoom: return()
@@ -112,8 +124,8 @@ class FtcGuiApplication(TouchApplication):
             if os.path.isdir(picsdir + data): self.dirstack.append(data)
         
         self.dirstack.sort()
-        self.album.clear()
-        self.album.addItems(self.dirstack)
+        #self.album.clear()
+        #self.album.addItems(self.dirstack)
         
     def scan_images(self):
         
@@ -459,24 +471,36 @@ class FtcGuiApplication(TouchApplication):
         
         self.myStackLayout2.setLayout(layout)
 
-    def albumlist(self):
-        if self.album.currentItem():
-          self.currdir=self.album.currentItem().text()
-          self.scan_images()
-          self.currpic=0
-          self.on_timer()
-        
+    
+    def selectalbum(self,click):
+      req=TouchAuxListRequester("Select:",None,self.dirstack,self.currdir,"Open")  
+      (void, self.currdir)=req.exec_()
+      self.album.setText(self.currdir)
+      self.scan_images()
+      self.currpic=0
+      self.on_timer()
+          
     def ThirdWidget(self):
+        
         layout = QVBoxLayout()
      
-        self.album = QListWidget()
-        self.album.addItems([])
-        self.album.currentItemChanged.connect(self.albumlist)
+        labox=QHBoxLayout()
+        lab=QLabel()
+        lab.setText("Album:")
+        labox.addWidget(lab)
+        labox.addStretch()
+        
+        self.tw_changeAlbum = PicButton(QPixmap(icondir+"edit-undo.png"))
+        self.tw_changeAlbum.clicked.connect(self.selectalbum)
+        labox.addWidget(self.tw_changeAlbum)
+        layout.addLayout(labox)
+        
+        self.album = QLineEdit()
+        self.album.setReadOnly(True)
+        self.album.setText(self.currdir)
+
         layout.addWidget(self.album)
-        
-        bottbox = QHBoxLayout()
-        
-        self.tw_pback = PicButton(QPixmap(icondir+"go-previous.png"))
+        layout.addStretch()        
         
         midbox=QHBoxLayout()
         
@@ -500,6 +524,10 @@ class FtcGuiApplication(TouchApplication):
         layout.addLayout(midbox)
         layout.addStretch()
         
+        bottbox = QHBoxLayout()
+        
+        self.tw_pback = PicButton(QPixmap(icondir+"go-previous.png"))
+        
         bottbox.addWidget(self.tw_pback)
         bottbox.addStretch()
         
@@ -516,7 +544,6 @@ class FtcGuiApplication(TouchApplication):
         
         self.tw_pfwd = PicButton(QPixmap(icondir+"go-next-disabled.png"))
         bottbox.addWidget(self.tw_pfwd)
-        #self.tw_pfwd.clicked.connect(self.switch)
         self.tw_pback.clicked.connect(self.switchback)
         
         layout.addLayout(bottbox)
