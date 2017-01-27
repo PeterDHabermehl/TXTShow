@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
+
 import sys, time, os
 from TxtStyle import *
 from threading import Timer
