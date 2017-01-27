@@ -7,6 +7,10 @@ from TouchStyle import *
 from threading import Timer
 from auxiliaries import *
 
+if TouchStyle_version<1.2:
+     print("TouchStyle >= v1.2 not found!")
+     exit(1)
+
 local = os.path.dirname(os.path.realpath(__file__)) + "/"
 icondir = local + "icons/"
 picsdir = local + "pics/"
@@ -39,14 +43,16 @@ class FtcGuiApplication(TouchApplication):
         
         self.window.show()
         
-        msg=TouchMessageBox("About", None)
-        msg.setText("TXTShow app\nby P. Habermehl\nbased upon the work of\nTill Harbaum\nThanks to all contributors!")
-        msg.setTextSize(2)
+        msg=TouchMessageBox("Full load", None)
+        msg.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus aliquet egestas elit, et lacinia odio convallis ut."+"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus aliquet egestas elit, et lacinia odio convallis ut.")
+        msg.addPixmap(QPixmap(icondir + "camera-web.png"))
+        #msg.setPixmapBelow()
+        msg.setTextSize(3)
         msg.addConfirm()
         msg.setCancelButton()
-        msg.setPosButton("cool")
-           
-        msg=TouchKeyboard(self.parent())
+        msg.setPosButton("really")
+        msg.setNegButton("cool")
+        msg.buttonsVertical(False)
         print(msg.exec_())
         
         self.timer.start(self.timerdelay)
