@@ -3,7 +3,7 @@
 #
 
 import sys, time, os
-from TxtStyle import *
+from TouchStyle import *
 from threading import Timer
 from auxiliaries import *
 
@@ -12,9 +12,9 @@ icondir = local + "icons/"
 picsdir = local + "pics/"
 ovldir = local + "overlay/"
         
-class FtcGuiApplication(TxtApplication):
+class FtcGuiApplication(TouchApplication):
     def __init__(self, args):
-        TxtApplication.__init__(self, args)
+        TouchApplication.__init__(self, args)
         
         self.maxpic=0
         self.maxdir=0
@@ -25,7 +25,7 @@ class FtcGuiApplication(TxtApplication):
         self.allowZoom=False
         self.timerdelay=3000
         
-        self.window = TxtWindow("TXTShow")
+        self.window = TouchWindow("TXTShow")
         self.setupLayout()
         
         self.timer =QTimer(self)
@@ -38,6 +38,16 @@ class FtcGuiApplication(TxtApplication):
         self.scan_images()
         
         self.window.show()
+        
+        msg=TouchMessageBox("About", None)
+        msg.setText("TXTShow app\nby P. Habermehl\nbased upon the work of\nTill Harbaum\nThanks to all contributors!")
+        msg.setTextSize(2)
+        msg.addConfirm()
+        msg.setCancelButton()
+        msg.setPosButton("cool")
+           
+        msg=TouchKeyboard(self.parent())
+        print(msg.exec_())
         
         self.timer.start(self.timerdelay)
         self.on_timer() # erstes Bild laden!
