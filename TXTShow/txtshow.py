@@ -125,10 +125,6 @@ class FtcGuiApplication(TouchApplication):
             else: self.picstack.append("fail.png")
             self.currpic=-1
         
-        self.fw_dial.setRange(1,len(self.picstack))
-        self.fw_dial.setValue(self.currpic+1)
-        self.tw_album.setText(self.currdir)
-
         self.updatelayerimage()
             
     def switch(self):
@@ -145,6 +141,13 @@ class FtcGuiApplication(TouchApplication):
           self.myStack.setCurrentIndex(0)
     
     def updatelayerimage(self):
+        self.tw_album.setText(self.currdir)
+        if self.picstack[self.currpic]=="../fail.png":
+            self.fw_dial.setRange(0,0)
+            self.fw_dial.setValue(0)
+        else:   
+            self.fw_dial.setRange(1,len(self.picstack))
+            self.fw_dial.setValue(self.currpic+1)
         if self.layer_picture.pixmap():
             self.sw_image.setPixmap(self.layer_picture.pixmap().scaled(QSize(232,194), Qt.KeepAspectRatio, Qt.SmoothTransformation).transformed(QTransform().rotate(90)))
 
@@ -502,13 +505,38 @@ class FtcGuiApplication(TouchApplication):
             msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
             msg.setPosButton("Okay")
             (void,void)=msg.exec_() 
+    
+    def sw_on_clicked_renImage(self):
+        if self.picstack[self.currpic]=="../fail.png":
+            msg=TouchAuxMessageBox("Info", self.parent())
+            msg.setText("'"+self.currdir+"' is empty. Nothing to rename.")
+            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+            msg.setPosButton("Okay")
+            (void,void)=msg.exec_()
+            return
+        (base,extention)=os.path.splitext(self.picstack[self.currpic])
+        msg=TouchAuxRequestText("Rename", "Please enter new name for '"+self.picstack[self.currpic]+"':", base, "Rename", self.parent())
+        (success,newname)=msg.exec_()
+        if success and not newname==base:
+            newname=self.clean(newname,12)
+            os.rename(picsdir+self.currdir+"/"+self.picstack[self.currpic], picsdir+self.currdir+"/"+newname+extention)
+            self.scan_images()
+            print("alt:",self.currpic)
+            self.currpic=self.picstack.index(newname+extention)
+            print("neu:",self.currpic)
+        else:
+            msg=TouchAuxMessageBox("Info", self.parent())
+            msg.setText("Unable to rename image '"+self.picstack[self.currpic]+"' to '"+newname+extention+"'!")
+            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+            msg.setPosButton("Okay")
+            (void,void)=msg.exec_() 
             
             
     def SecondWidget(self):
         layout = QVBoxLayout()
         
         self.sw_image=QLabel()
-        self.sw_image.setStyleSheet("border: 1px solid; border-style: outset")
+        #self.sw_image.setStyleSheet("border: 1px solid; border-style: outset")
         self.sw_image.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.sw_image)
         
@@ -528,7 +556,7 @@ class FtcGuiApplication(TouchApplication):
         midbox.addStretch()
         
         self.sw_renImage = PicButton(QPixmap(icondir+"edit-rename.png"))
-        #self.sw_renImage.clicked.connect(self.sw_on_clicked_renImage)
+        self.sw_renImage.clicked.connect(self.sw_on_clicked_renImage)
         midbox.addWidget(self.sw_renImage)
         
         midbox.addStretch()
@@ -636,8 +664,9 @@ class FtcGuiApplication(TouchApplication):
             msg.setPosButton("Okay")
             (void,void)=msg.exec_()
           
+      
     def renAlbum(self):
-        msg=TouchAuxRequestText("Rename", "New name for '"+self.currdir+"':", self.currdir, "Rename", self.parent())
+        msg=TouchAuxRequestText("Rename", "Please enter new name for '"+self.currdir+"':", self.currdir, "Rename", self.parent())
         (success,newdir)=msg.exec_()
         if success:
             newdir=self.clean(newdir,12)
