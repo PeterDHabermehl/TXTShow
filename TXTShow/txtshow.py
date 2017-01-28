@@ -418,7 +418,13 @@ class FtcGuiApplication(TouchApplication):
         
     def sw_on_clicked_del(self):
         
-        if self.picstack[self.currpic]=="../fail.png": return
+        if self.picstack[self.currpic]=="../fail.png":
+            msg=TouchAuxMessageBox("Info", self.parent())
+            msg.setText("'"+self.currdir+"' is already empty.")
+            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+            msg.setPosButton("Okay")
+            (void,void)=msg.exec_()
+            return
       
         msg=TouchAuxMessageBox("Warning", self.parent())
         msg.setText("Really permanently delete the image '"+self.picstack[self.currpic]+"'?")
@@ -434,7 +440,69 @@ class FtcGuiApplication(TouchApplication):
           self.scan_images()
           self.currpic=self.currpic-1
           self.on_timer()
-
+          
+    def sw_on_clicked_copy(self):
+        if self.picstack[self.currpic]=="../fail.png":
+            msg=TouchAuxMessageBox("Info", self.parent())
+            msg.setText("'"+self.currdir+"' is empty. Nothing to copy.")
+            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+            msg.setPosButton("Okay")
+            (void,void)=msg.exec_()
+            return
+          
+        req=TouchAuxListRequester("Copy","'"+self.picstack[self.currpic]+"' to album:",self.dirstack,self.currdir,"Copy")  
+        (success, destdir)=req.exec_()
+   
+        if success and not(self.currdir==destdir):
+            if os.path.isfile(picsdir+destdir+"/"+self.picstack[self.currpic]):
+                msg=TouchAuxMessageBox("Info", self.parent())
+                msg.setText("Image '"+self.picstack[self.currpic]+"' already exists in album '"+destdir+"'!")
+                msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                msg.setPosButton("Okay")
+                (void,void)=msg.exec_()
+            else:
+                cm="cp "+picsdir+self.currdir+"/"+self.picstack[self.currpic]+" "+picsdir+destdir+"/"
+                void=run_program(cm)
+        else:
+            msg=TouchAuxMessageBox("Info", self.parent())
+            msg.setText("Unable to copy image '"+self.picstack[self.currpic]+"' to album '"+destdir+"'!")
+            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+            msg.setPosButton("Okay")
+            (void,void)=msg.exec_()
+    
+    def sw_on_clicked_move(self):
+        if self.picstack[self.currpic]=="../fail.png":
+            msg=TouchAuxMessageBox("Info", self.parent())
+            msg.setText("'"+self.currdir+"' is empty. Nothing to move.")
+            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+            msg.setPosButton("Okay")
+            (void,void)=msg.exec_()
+            return
+          
+        req=TouchAuxListRequester("Move","'"+self.picstack[self.currpic]+"' to album:",self.dirstack,self.currdir,"Move")  
+        (success, destdir)=req.exec_()
+       
+        if success and not(self.currdir==destdir):
+            if os.path.isfile(picsdir+destdir+"/"+self.picstack[self.currpic]):
+                msg=TouchAuxMessageBox("Info", self.parent())
+                msg.setText("Image '"+self.picstack[self.currpic]+"' already exists in album '"+destdir+"'!")
+                msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                msg.setPosButton("Okay")
+                (void,void)=msg.exec_()
+            else:
+                cm="mv "+picsdir+self.currdir+"/"+self.picstack[self.currpic]+" "+picsdir+destdir+"/"
+                void=run_program(cm)
+                self.scan_directories()
+                self.scan_images()
+                self.currpic=self.currpic-1
+                self.on_timer()
+        else:
+            msg=TouchAuxMessageBox("Info", self.parent())
+            msg.setText("Unable to move image '"+self.picstack[self.currpic]+"' to album '"+destdir+"'!")
+            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+            msg.setPosButton("Okay")
+            (void,void)=msg.exec_() 
+            
             
     def SecondWidget(self):
         layout = QVBoxLayout()
@@ -448,14 +516,20 @@ class FtcGuiApplication(TouchApplication):
         midbox.addStretch()
         
         self.sw_copy = PicButton(QPixmap(icondir+"edit-copy.png"))
-        #self.sw_copy.clicked.connect(self.sw_copy_clicked)
+        self.sw_copy.clicked.connect(self.sw_on_clicked_copy)
         midbox.addWidget(self.sw_copy)
         
         midbox.addStretch()
         
         self.sw_move = PicButton(QPixmap(icondir+"edit-cut.png"))
-        #self.sw_move.clicked.connect(self.sw_move_clicked)
+        self.sw_move.clicked.connect(self.sw_on_clicked_move)
         midbox.addWidget(self.sw_move)
+        
+        midbox.addStretch()
+        
+        self.sw_renImage = PicButton(QPixmap(icondir+"edit-rename.png"))
+        #self.sw_renImage.clicked.connect(self.sw_on_clicked_renImage)
+        midbox.addWidget(self.sw_renImage)
         
         midbox.addStretch()
         
@@ -500,7 +574,7 @@ class FtcGuiApplication(TouchApplication):
       (void, self.currdir)=req.exec_()
       self.tw_album.setText(self.currdir)
       self.scan_images()
-      self.currpic=0
+      self.currpic=-1
       self.on_timer()
           
     def clean(self,newdir,maxlen):
@@ -539,7 +613,11 @@ class FtcGuiApplication(TouchApplication):
     def delAlbum(self):
         if len(self.dirstack)>1:
             msg=TouchAuxMessageBox("Warning", self.parent())
-            msg.setText("Really permanently delete the album '"+self.currdir+"' with all images?")
+            
+            if self.picstack[0]=="../fail.png": n=0
+            else: n=len(self.picstack)
+            
+            msg.setText("Really permanently delete the album '"+self.currdir+"' with "+str(n)+" images?")
             msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
             msg.setPosButton("Yes")
             msg.setNegButton("Cancel")
