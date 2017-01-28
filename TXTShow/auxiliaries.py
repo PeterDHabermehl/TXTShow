@@ -1,7 +1,8 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-import sys, time, os
+import sys, time, os, shlex
+from subprocess import *
 from TouchStyle import *
 from threading import Timer
 
@@ -57,10 +58,6 @@ class TouchAuxListRequester(TouchDialog):
         self.layout.addLayout(midbox)
         self.itemlist.setCurrentRow(items.index(inititem))
         
-        # confirm button
-        
-        #self.layout.addWidget(self.dial)
-        #self.layout.addStretch()
         
         # the button
         but_okay = QPushButton(button)

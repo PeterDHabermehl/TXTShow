@@ -25,7 +25,7 @@ class FtcGuiApplication(TouchApplication):
         
         self.maxpic=0
         self.maxdir=0
-        self.currpic=1
+        self.currpic=0
         self.currdir=""
         self.autorotate=True
         self.autoscale=True
@@ -48,25 +48,10 @@ class FtcGuiApplication(TouchApplication):
         
         #name="Olaf"
         #msg=TouchAuxRequestText("Name:","Bitte Name eingeben:",name,"Okay")
-        #title:str,message:str,initval:int,button:str,minval,maxval
-        #msg=TouchAuxRequestInteger("Zahl:","Geschwindigkeit:",5,-10,10,"O-kay")
-        #title:str,message:str,items,inititem,button:str
-        #msg=TouchAuxListRequester("List:","Select:",["Hund","Katz","Maus","Jan","Jenny"],"Jan","Wau")
         #print(msg.exec_())
-        #exit()
-        #msg=TouchAuxMessageBox("Full load", None)
-        #msg.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus aliquet egestas elit, et lacinia odio convallis ut."+"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus aliquet egestas elit, et lacinia odio convallis ut.")
-        #msg.addPixmap(QPixmap(icondir + "camera-web.png"))
-        #msg.setPixmapBelow()
-        #msg.setTextSize(2)
-        #msg.addConfirm()
-        #msg.setCancelButton()
-        #msg.setPosButton("really")
-        #msg.setNegButton("cool")
-        #msg.buttonsVertical(False)
-        #print(msg.exec_())
-        
+
         self.timer.start(self.timerdelay)
+        self.currpic=-1
         self.on_timer() # erstes Bild laden!
          
         self.exec_()        
@@ -76,12 +61,10 @@ class FtcGuiApplication(TouchApplication):
 #
 
     def on_timer(self):
-        if not self.layer_picture.isVisible():
-            return()
         self.currpic=self.currpic+1
+        
         self.scan_images()
         if self.currpic>=len(self.picstack): self.currpic=0
-        self.layer_picture.setAlignment(Qt.AlignCenter)
         
         self.offset_x=0
         self.offset_y=0
@@ -99,11 +82,9 @@ class FtcGuiApplication(TouchApplication):
         if self.autoscale or (not self.allowZoom):
             self.layer_picture.setPixmap(self.currpixmap.scaled(QSize(240, 320), Qt.KeepAspectRatio, Qt.SmoothTransformation))
         else:
-            self.paint_zoom()        
-                
-        self.fw_dial.setValue(self.currpic+1)
-        self.album.setText(self.currdir)
-    
+            self.paint_zoom()
+        self.updatelayerimage()
+        
     def paint_zoom(self):
         if not self.allowZoom: return()
         base_x = (self.currpixmap.width()/2)-120
@@ -124,8 +105,6 @@ class FtcGuiApplication(TouchApplication):
             if os.path.isdir(picsdir + data): self.dirstack.append(data)
         
         self.dirstack.sort()
-        #self.album.clear()
-        #self.album.addItems(self.dirstack)
         
     def scan_images(self):
         
@@ -138,19 +117,26 @@ class FtcGuiApplication(TouchApplication):
             self.currdir=self.dirstack[0]
             self.picstack=os.listdir(picsdir+self.currdir)
             self.picstack.sort()
-  
+            self.currpic=-1
         if len(self.picstack)==0:
             self.picstack=list()
             if self.currdir != "":
               self.picstack.append("../fail.png")
             else: self.picstack.append("fail.png")
-            self.currpic=0
+            self.currpic=-1
         
         self.fw_dial.setRange(1,len(self.picstack))
-       
-              
-    def switch(self):
         self.fw_dial.setValue(self.currpic+1)
+        self.tw_album.setText(self.currdir)
+
+        self.updatelayerimage()
+            
+    def switch(self):
+        self.currpic=self.currpic-1
+        self.on_timer()
+        self.fw_dial.setValue(self.currpic+1)
+        self.updatelayerimage()
+        
         if self.myStack.currentIndex()==0:
           self.myStack.setCurrentIndex(1)
         elif self.myStack.currentIndex()==1:
@@ -158,8 +144,15 @@ class FtcGuiApplication(TouchApplication):
         else:
           self.myStack.setCurrentIndex(0)
     
+    def updatelayerimage(self):
+        if self.layer_picture.pixmap():
+            self.sw_image.setPixmap(self.layer_picture.pixmap().scaled(QSize(232,194), Qt.KeepAspectRatio, Qt.SmoothTransformation).transformed(QTransform().rotate(90)))
+
     def switchback(self):
-        self.fw_dial.setValue(self.currpic+1)     
+        self.currpic=self.currpic-1
+        self.on_timer()
+        self.fw_dial.setValue(self.currpic+1)
+        self.updatelayerimage()     
         if self.myStack.currentIndex()==2:
           self.myStack.setCurrentIndex(1)
         elif self.myStack.currentIndex()==1:
@@ -196,6 +189,7 @@ class FtcGuiApplication(TouchApplication):
         self.layer_picture = QLabel(self.window)
         self.layer_picture.setGeometry(0, 0, 240, 320)
         self.layer_picture.mousePressEvent=self.on_picture_clicked
+        self.layer_picture.setAlignment(Qt.AlignCenter)
         
         self.layer_overlay = QLabel(self.window)
         self.layer_overlay.setGeometry(0, 0, 240, 320)
@@ -327,6 +321,8 @@ class FtcGuiApplication(TouchApplication):
         
     
     def layer_hide(self):
+        self.remembertimer=self.timer.isActive()
+        self.timer.stop()
         self.scan_directories()
         self.scan_images()
         self.layer_black.hide()
@@ -334,7 +330,7 @@ class FtcGuiApplication(TouchApplication):
         self.layer_overlay.hide()
         
     def layer_show(self):
-        if self.timer.isActive(): 
+        if self.timer.isActive() or self.remembertimer: 
             self.timer.stop()
             self.timer.start(self.timerdelay)
         self.layer_black.show()
@@ -345,6 +341,11 @@ class FtcGuiApplication(TouchApplication):
     
     def program_exit(self):
         exit()
+        
+    def set_delay(self):
+        msg=TouchAuxRequestInteger("Delay","Set slide show delay:",self.timerdelay/1000,2,30,"Set")
+        (void,tim)=msg.exec_()
+        self.timerdelay=tim*1000
         
     def FirstWidget(self):
         layout = QVBoxLayout()
@@ -378,9 +379,9 @@ class FtcGuiApplication(TouchApplication):
         
         bottbox = QHBoxLayout()
         
-        self.fw_pback = PicButton(QPixmap(icondir+"go-previous-disabled.png"))
-        
-        bottbox.addWidget(self.fw_pback)
+        self.fw_chrono = PicButton(QPixmap(icondir+"chronometer.png"))
+        self.fw_chrono.clicked.connect(self.set_delay)
+        bottbox.addWidget(self.fw_chrono)
         bottbox.addStretch()
         
         
@@ -415,11 +416,32 @@ class FtcGuiApplication(TouchApplication):
         self.fw_current.setText(str(self.fw_dial.value()))
         self.currpic=self.fw_dial.value()-1
         
+    def sw_on_clicked_del(self):
+        
+        if self.picstack[self.currpic]=="../fail.png": return
+      
+        msg=TouchAuxMessageBox("Warning", self.parent())
+        msg.setText("Really permanently delete the image '"+self.picstack[self.currpic]+"'?")
+        msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+        msg.setPosButton("Yes")
+        msg.setNegButton("Cancel")
+        msg.buttonsVertical(False)
+        (void,res)=msg.exec_()
+        if res=="Yes":
+          cm="rm "+picsdir+self.currdir+"/"+self.picstack[self.currpic]
+          void=run_program(cm)          
+          self.scan_directories()
+          self.scan_images()
+          self.currpic=self.currpic-1
+          self.on_timer()
+
+            
     def SecondWidget(self):
         layout = QVBoxLayout()
         
         self.sw_image=QLabel()
-        self.sw_image.setStyleSheet("border: 2px solid; border-style: outset")
+        self.sw_image.setStyleSheet("border: 1px solid; border-style: outset")
+        self.sw_image.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.sw_image)
         
         midbox = QHBoxLayout()
@@ -438,6 +460,7 @@ class FtcGuiApplication(TouchApplication):
         midbox.addStretch()
         
         self.sw_delete = PicButton(QPixmap(icondir+"trash-empty.png"))
+        self.sw_delete.clicked.connect(self.sw_on_clicked_del)
         midbox.addWidget(self.sw_delete)
         midbox.addStretch()
         
@@ -473,13 +496,94 @@ class FtcGuiApplication(TouchApplication):
 
     
     def selectalbum(self,click):
-      req=TouchAuxListRequester("Select:",None,self.dirstack,self.currdir,"Open")  
+      req=TouchAuxListRequester("Select","Album to open:",self.dirstack,self.currdir,"Open")  
       (void, self.currdir)=req.exec_()
-      self.album.setText(self.currdir)
+      self.tw_album.setText(self.currdir)
       self.scan_images()
       self.currpic=0
       self.on_timer()
           
+    def clean(self,newdir,maxlen):
+        res=""
+        valid="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-."
+        for ch in newdir:
+            if ch in valid: res=res+ch
+        return res[:maxlen]
+      
+    def addAlbum(self):
+        msg=TouchAuxRequestText("New", "Album to be created:", "MyAlbum", "Create", self.parent())
+        (success,newdir)=msg.exec_()
+        if success:
+            newdir=self.clean(newdir,12)
+            if newdir in self.dirstack:
+                msg=TouchAuxMessageBox("Info", self.parent())
+                msg.setText("'"+newdir+"' already exists! Could not create.")
+                msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                msg.setPosButton("Okay")
+                (void,void)=msg.exec_()
+            else:
+                try:
+                    os.mkdir(picsdir + newdir)
+                    self.currdir=newdir
+                except:
+                    msg=TouchAuxMessageBox("Info", self.parent())
+                    msg.setText("'"+newdir+"' could not be created.")
+                    msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                    msg.setPosButton("Okay")
+                    (void,void)=msg.exec_()
+                
+                self.scan_directories()
+                self.scan_images()
+                self.on_timer()
+
+    def delAlbum(self):
+        if len(self.dirstack)>1:
+            msg=TouchAuxMessageBox("Warning", self.parent())
+            msg.setText("Really permanently delete the album '"+self.currdir+"' with all images?")
+            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+            msg.setPosButton("Yes")
+            msg.setNegButton("Cancel")
+            msg.buttonsVertical(False)
+            (void,res)=msg.exec_()
+            if res=="Yes":
+              cm="rm -r "+picsdir+self.currdir+"/"
+              void=run_program(cm)
+              self.scan_directories()
+              self.scan_images()
+              self.on_timer()
+        else:
+            msg=TouchAuxMessageBox("Info", self.parent())
+            msg.setText("'"+self.currdir+"' is the last album and can not be deleted.")
+            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+            msg.setPosButton("Okay")
+            (void,void)=msg.exec_()
+          
+    def renAlbum(self):
+        msg=TouchAuxRequestText("Rename", "New name for '"+self.currdir+"':", self.currdir, "Rename", self.parent())
+        (success,newdir)=msg.exec_()
+        if success:
+            newdir=self.clean(newdir,12)
+            if newdir in self.dirstack:
+                msg=TouchAuxMessageBox("Info", self.parent())
+                msg.setText("'"+newdir+"' already exists! Could not rename.")
+                msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                msg.setPosButton("Okay")
+                (void,void)=msg.exec_()
+            else:
+                try:
+                    os.rename(picsdir+self.currdir, picsdir + newdir)
+                    self.currdir=newdir
+                except:
+                    msg=TouchAuxMessageBox("Info", self.parent())
+                    msg.setText("'"+self.currdir+"' could not be renamed.")
+                    msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                    msg.setPosButton("Okay")
+                    (void,void)=msg.exec_()
+                
+                self.scan_directories()
+                self.scan_images()
+                self.on_timer()
+    
     def ThirdWidget(self):
         
         layout = QVBoxLayout()
@@ -490,16 +594,16 @@ class FtcGuiApplication(TouchApplication):
         labox.addWidget(lab)
         labox.addStretch()
         
-        self.tw_changeAlbum = PicButton(QPixmap(icondir+"edit-undo.png"))
+        self.tw_changeAlbum = PicButton(QPixmap(icondir+"folder-image-people.png"))
         self.tw_changeAlbum.clicked.connect(self.selectalbum)
         labox.addWidget(self.tw_changeAlbum)
         layout.addLayout(labox)
         
-        self.album = QLineEdit()
-        self.album.setReadOnly(True)
-        self.album.setText(self.currdir)
+        self.tw_album = QLineEdit()
+        self.tw_album.setReadOnly(True)
+        self.tw_album.setText(self.currdir)
 
-        layout.addWidget(self.album)
+        layout.addWidget(self.tw_album)
         layout.addStretch()        
         
         midbox=QHBoxLayout()
@@ -507,17 +611,20 @@ class FtcGuiApplication(TouchApplication):
         midbox.addStretch()
         
         tw_addAlbum = PicButton(QPixmap(icondir+"folder-add.png"))
+        tw_addAlbum.clicked.connect(self.addAlbum)
         midbox.addWidget(tw_addAlbum)
 
         midbox.addStretch()
         
         tw_delAlbum = PicButton(QPixmap(icondir+"folder-del.png"))
+        tw_delAlbum.clicked.connect(self.delAlbum)
         midbox.addWidget(tw_delAlbum)
         
         midbox.addStretch()
         
-        tw_renameAlbum = PicButton(QPixmap(icondir+"edit-rename.png"))
-        midbox.addWidget(tw_renameAlbum)
+        tw_renAlbum = PicButton(QPixmap(icondir+"edit-rename.png"))
+        tw_renAlbum.clicked.connect(self.renAlbum)
+        midbox.addWidget(tw_renAlbum)
         
         midbox.addStretch()
        
