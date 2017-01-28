@@ -427,7 +427,7 @@ class FtcGuiApplication(TouchApplication):
             return
       
         msg=TouchAuxMessageBox("Warning", self.parent())
-        msg.setText("Really permanently delete the image '"+self.picstack[self.currpic]+"'?")
+        msg.setText("Permanently delete image '"+self.picstack[self.currpic]+"' from album '"+self.currdir+"'?")
         msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
         msg.setPosButton("Yes")
         msg.setNegButton("Cancel")
