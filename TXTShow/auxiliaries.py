@@ -15,6 +15,24 @@ except:
 
 
 class TouchAuxListRequester(TouchDialog):
+    """ 
+        Opens up a window containing a list of items and returns the item selected by the user
+        
+        ******** function call **********
+        (succes:bool, result:str) = TouchAuxListRequester(title:str, items:str[], inititem:str, button:str, parent:class)
+        
+        ******** parameters *************
+        
+        title:str       Title of the input window
+        items:str[]     Array of string contains the list of items to be displayed
+        inititem:str    Initially selected item, will also be returned in case of cancellation 
+        button:str      Text label for the confirm button, only considered for TouchStyle_version<1.3, otherwise confirm and cancel buttons will be part of the window title
+        parent:class    Parent class
+        
+        ******** Return values **********
+        success         True for user confirmed selection, False for user aborted selection
+        result          selected item in case of success==True or inititem in case of success==False
+    """
     def __init__(self,title:str,message:str,items,inititem,button:str,parent=None):
         TouchDialog.__init__(self,title,parent)  
                 
@@ -64,7 +82,7 @@ class TouchAuxListRequester(TouchDialog):
         but_okay.setObjectName("smalllabel")
         but_okay.clicked.connect(self.on_select)
         
-        if TouchStyle_version >=1.4:
+        if TouchStyle_version >=1.3:
             self.addConfirm()
             self.setCancelButton()
         else:    
@@ -89,7 +107,27 @@ class TouchAuxListRequester(TouchDialog):
       
 
 class TouchAuxRequestInteger(TouchDialog):
-    def __init__(self,title:str,message:str,initvalue:int,minval,maxval,button:str,parent=None):
+    """ 
+        Opens up a window to get a integer number input
+        
+        ******** function call **********
+        (succes:bool, result:int) = TouchAuxListRequester(title:str, message:str, initvalue:int, maxval:int, minval:int, button:str, parent:class)
+        
+        ******** parameters *************
+        
+        title:str       Title of the input window
+        message:str     text message to be displayed
+        initvalue:int   Init value for the input dial
+        maxval:int      Upper limit for the input number
+        minval:int      Lower limit for the inout number
+        button:str      Text label for the confirm button, only considered for TouchStyle_version<1.3, otherwise confirm and cancel buttons will be part of the window title
+        parent:class    Parent class
+        
+        ******** Return values **********
+        success         True for user confirmed selection, False for user aborted selection
+        result          Input value in case of success==True or initvalue in case of success==False
+    """
+    def __init__(self,title:str,message:str,initvalue:int,minval:int,maxval:int,button:str,parent=None):
         TouchDialog.__init__(self,title,parent)  
         
         
@@ -111,7 +149,6 @@ class TouchAuxRequestInteger(TouchDialog):
             self.layout.addLayout(mh)
             
         # the dial 
-        #db=QVBoxLayout()
         self.dial=QDial()
         self.dial.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.dial.setNotchesVisible(True)
@@ -120,14 +157,10 @@ class TouchAuxRequestInteger(TouchDialog):
         self.dial.valueChanged.connect(self.show_value)
         #db.addWidget(self.dial)
         self.layout.addWidget(self.dial)
-        
-        #self.layout.addStretch()
-        
-        
+              
         # buttons and label
         midbox = QHBoxLayout()
   
-        #midbox.addStretch()
         self.bckbutt = QPushButton(" < ")
         self.bckbutt.clicked.connect(self.bckbutt_clicked)
         midbox.addWidget(self.bckbutt)
@@ -144,18 +177,14 @@ class TouchAuxRequestInteger(TouchDialog):
         midbox.addWidget(self.fwdbutt)
                 
         self.layout.addLayout(midbox)
-        
-        # confirm button
-        
-        #self.layout.addWidget(self.dial)
-        #self.layout.addStretch()
+           
         
         # the button
         but_okay = QPushButton(button)
         but_okay.setObjectName("smalllabel")
         but_okay.clicked.connect(self.on_select)
         
-        if TouchStyle_version >=1.4:
+        if TouchStyle_version >=1.3:
             self.addConfirm()
             self.setCancelButton()
         else:    
@@ -265,8 +294,8 @@ def run_program(rcmd):
             print( "Executable '%s' returned with the error: \"%s\"" %(executable,response_stderr) )
             return response
         else:
-            #print( "Executable '%s' returned successfully." %(executable) )
-            #print( " First line of response was \"%s\"" %(response_stdout.split('\n')[0] ))
+            print( "Executable '%s' returned successfully." %(executable) )
+            print( " First line of response was \"%s\"" %(response_stdout.split('\n')[0] ))
             return response_stdout
           
 class PicButton(QAbstractButton):
@@ -285,11 +314,12 @@ class TouchAuxMessageBox(TouchDialog):
     """ Versatile MessageBox for TouchUI
         
         msg = TouchMessageBox(title, parent)
+        (success, text) = msg.exec_()
         
-        Methods:
+        ********* Methods: *********
         
-        msg.addConfirm() adds confirm button at the left of the title
-        msg.setCancelButton() changes style of the close icon to cancel icon
+        msg.addConfirm() (only for TouchStyle_version>=1.3) confirm button at the left of the title
+        msg.setCancelButton() (only for TouchStyle_version>=1.3) changes style of the close icon to cancel icon
         
         msg.addPixmap(QPixmap) adds a QPixmap to be shown on top of the message text
         msg.setPixmapBelow() places the pixmap below the text (inbetween text and buttons), defalt is above the text
@@ -336,6 +366,12 @@ class TouchAuxMessageBox(TouchDialog):
         self.result = ""
         self.confbutclicked=False
         
+    def addConfirm(self):
+        if TouchStyle_version>=1.3: self.addConfirm()
+    
+    def setCancelButton():
+        if TouchStyle_version>=1.3: self.setCancelButton()
+    
     def addPixmap(self, pmap: QPixmap):
         self.pixmap=pmap
     

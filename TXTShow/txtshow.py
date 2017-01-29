@@ -435,7 +435,8 @@ class FtcGuiApplication(TouchApplication):
         msg.setPosButton("Yes")
         msg.setNegButton("Cancel")
         msg.buttonsVertical(False)
-        (void,res)=msg.exec_()
+        (success,res)=msg.exec_()
+        
         if res=="Yes":
           cm="rm "+picsdir+self.currdir+"/"+self.picstack[self.currpic]
           void=run_program(cm)          
@@ -456,22 +457,23 @@ class FtcGuiApplication(TouchApplication):
         req=TouchAuxListRequester("Copy","'"+self.picstack[self.currpic]+"' to album:",self.dirstack,self.currdir,"Copy")  
         (success, destdir)=req.exec_()
    
-        if success and not(self.currdir==destdir):
-            if os.path.isfile(picsdir+destdir+"/"+self.picstack[self.currpic]):
+        if success:
+            if not(self.currdir==destdir):
+                if os.path.isfile(picsdir+destdir+"/"+self.picstack[self.currpic]):
+                    msg=TouchAuxMessageBox("Info", self.parent())
+                    msg.setText("Image '"+self.picstack[self.currpic]+"' already exists in album '"+destdir+"'!")
+                    msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                    msg.setPosButton("Okay")
+                    (void,void)=msg.exec_()
+                else:
+                    cm="cp "+picsdir+self.currdir+"/"+self.picstack[self.currpic]+" "+picsdir+destdir+"/"
+                    void=run_program(cm)
+            else:
                 msg=TouchAuxMessageBox("Info", self.parent())
-                msg.setText("Image '"+self.picstack[self.currpic]+"' already exists in album '"+destdir+"'!")
+                msg.setText("Unable to copy image '"+self.picstack[self.currpic]+"' to album '"+destdir+"'!")
                 msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
                 msg.setPosButton("Okay")
                 (void,void)=msg.exec_()
-            else:
-                cm="cp "+picsdir+self.currdir+"/"+self.picstack[self.currpic]+" "+picsdir+destdir+"/"
-                void=run_program(cm)
-        else:
-            msg=TouchAuxMessageBox("Info", self.parent())
-            msg.setText("Unable to copy image '"+self.picstack[self.currpic]+"' to album '"+destdir+"'!")
-            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-            msg.setPosButton("Okay")
-            (void,void)=msg.exec_()
     
     def sw_on_clicked_move(self):
         if self.picstack[self.currpic]=="../fail.png":
@@ -485,27 +487,28 @@ class FtcGuiApplication(TouchApplication):
         req=TouchAuxListRequester("Move","'"+self.picstack[self.currpic]+"' to album:",self.dirstack,self.currdir,"Move")  
         (success, destdir)=req.exec_()
        
-        if success and not(self.currdir==destdir):
-            if os.path.isfile(picsdir+destdir+"/"+self.picstack[self.currpic]):
+        if success:
+            if not(self.currdir==destdir):
+                if os.path.isfile(picsdir+destdir+"/"+self.picstack[self.currpic]):
+                    msg=TouchAuxMessageBox("Info", self.parent())
+                    msg.setText("Image '"+self.picstack[self.currpic]+"' already exists in album '"+destdir+"'!")
+                    msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                    msg.setPosButton("Okay")
+                    (void,void)=msg.exec_()
+                else:
+                    cm="mv "+picsdir+self.currdir+"/"+self.picstack[self.currpic]+" "+picsdir+destdir+"/"
+                    void=run_program(cm)
+                    self.scan_directories()
+                    self.scan_images()
+                    self.currpic=self.currpic-1
+                    self.on_timer()
+            else:
                 msg=TouchAuxMessageBox("Info", self.parent())
-                msg.setText("Image '"+self.picstack[self.currpic]+"' already exists in album '"+destdir+"'!")
+                msg.setText("Unable to move image '"+self.picstack[self.currpic]+"' to album '"+destdir+"'!")
                 msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
                 msg.setPosButton("Okay")
-                (void,void)=msg.exec_()
-            else:
-                cm="mv "+picsdir+self.currdir+"/"+self.picstack[self.currpic]+" "+picsdir+destdir+"/"
-                void=run_program(cm)
-                self.scan_directories()
-                self.scan_images()
-                self.currpic=self.currpic-1
-                self.on_timer()
-        else:
-            msg=TouchAuxMessageBox("Info", self.parent())
-            msg.setText("Unable to move image '"+self.picstack[self.currpic]+"' to album '"+destdir+"'!")
-            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-            msg.setPosButton("Okay")
-            (void,void)=msg.exec_() 
-    
+                (void,void)=msg.exec_() 
+        
     def sw_on_clicked_renImage(self):
         if self.picstack[self.currpic]=="../fail.png":
             msg=TouchAuxMessageBox("Info", self.parent())
@@ -524,13 +527,14 @@ class FtcGuiApplication(TouchApplication):
             print("alt:",self.currpic)
             self.currpic=self.picstack.index(newname+extention)
             print("neu:",self.currpic)
+        """
         else:
             msg=TouchAuxMessageBox("Info", self.parent())
             msg.setText("Unable to rename image '"+self.picstack[self.currpic]+"' to '"+newname+extention+"'!")
             msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
             msg.setPosButton("Okay")
             (void,void)=msg.exec_() 
-            
+        """    
             
     def SecondWidget(self):
         layout = QVBoxLayout()
