@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 import sys, time, os, shlex
+import numpy, cv2
 from subprocess import *
 from TouchStyle import *
 from threading import Timer
@@ -13,6 +14,141 @@ except:
     print("aux: TouchStyle_version not found!")
     TouchStyle_version=0
 
+local = os.path.dirname(os.path.realpath(__file__)) + "/auxicon/"
+
+keys_tab = [ "A-O", "P-Z", "0-9" ]
+keys_upper = [
+    ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","Aa" ],
+    ["P","Q","R","S","T","U","V","W","X","Y","Z",".",","," ","_","Aa" ],
+    ["0","1","2","3","4","5","6","7","8","9","+","-","*","/","#","$" ]
+]
+keys_lower = [
+    ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","Aa" ],
+    ["p","q","r","s","t","u","v","w","x","y","z",":",";","!","?","Aa" ],
+    ["0","1","2","3","4","5","6","7","8","9","+","-","*","/","#","$" ]
+]
+
+
+
+
+class TouchAuxFTCamPhotoRequester(TouchDialog):
+    def __init__(self, title:str, width:int, height:int, button:str, parent=None):
+        TouchDialog.__init__(self,title,parent)
+        
+        self.img=None
+        
+        #container
+        
+        vbox=QVBoxLayout()
+        
+        self.cw=TouchAuxCamWidget(width,10)
+        
+        vbox.addWidget(self.cw)
+        vbox.addStretch()
+        
+        znap=QPushButton()
+        znap.setText(button)
+        znap.clicked.connect(self.on_photo)
+        vbox.addWidget(znap)
+        
+        self.centralWidget.setLayout(vbox) 
+    
+    def on_photo(self):
+        self.img=self.cw.getPhoto() 
+        self.close()
+        
+    def exec_(self):
+        TouchDialog.exec_(self)
+        return self.img
+      
+def TouchAuxFTCamIsPresent():
+    CAM_DEV = os.environ.get('FTC_CAM')
+    if CAM_DEV == None:
+        CAM_DEV = 0
+    else:
+        CAM_DEV=int(CAM_DEV)
+     
+    # initialize camera
+    cap = cv2.VideoCapture(CAM_DEV)       
+    if not cap.isOpened(): return false
+    else:                  return True
+
+class TouchAuxCamWidget(QWidget):
+    def __init__(self,cwidth:int=320, fps:int=10, parent=None):
+
+        super(TouchAuxCamWidget, self).__init__(parent)
+        
+        self.cwidth=cwidth
+        
+        CAM_DEV = os.environ.get('FTC_CAM')
+        if CAM_DEV == None:
+            CAM_DEV = 0
+        else:
+            CAM_DEV=int(CAM_DEV)
+
+        # initialize camera
+        self.cap = cv2.VideoCapture(CAM_DEV)
+        if self.cap.isOpened():
+            self.cap.set(3,cwidth)
+            self.cap.set(4,cwidth*3/4)
+            self.cap.set(5,fps)
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update)
+        self.timer.start(1000/fps)
+
+        qsp = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        qsp.setHeightForWidth(True)
+        self.setSizePolicy(qsp)
+
+    def sizeHint(self):
+        try:
+            return QSize(self.cwidth,self.cwidth*3/4)
+        except:
+            return QSize(320,240)
+
+    def heightForWidth(self,w):
+        return w*3/4
+        
+    
+    def grab(self):
+        self.frame = self.cap.read()[1]
+
+        # expand/shrink to widget size
+        wsize = (self.size().width(), self.size().height())
+        self.cvImage = cv2.resize(self.frame, wsize)
+
+        height, width, byteValue = self.cvImage.shape
+        bytes_per_line = byteValue * width
+
+        cv2.cvtColor(self.cvImage, cv2.COLOR_BGR2RGB, self.cvImage)
+        self.mQImage = QImage(self.cvImage, width, height,
+                              bytes_per_line, QImage.Format_RGB888)
+
+    def getPhoto(self):
+        frame = self.cap.read()[1]
+
+        height, width, byteValue = frame.shape
+        bytes_per_line = byteValue * width
+
+        cv2.cvtColor(frame, cv2.COLOR_BGR2RGB, frame)
+        return QImage(frame, width, height,
+                      bytes_per_line, QImage.Format_RGB888)
+
+        
+    def paintEvent(self, QPaintEvent):
+        painter = QPainter()
+        painter.begin(self)
+
+        if not self.cap.isOpened():
+            painter.drawText(QRect(QPoint(0,0), self.size()),
+                             Qt.AlignCenter, 
+                             "No camera")
+        else:
+            self.grab()
+            painter.drawImage(0,0,self.mQImage)
+            
+        painter.end()
 
 class TouchAuxListRequester(TouchDialog):
     """ 
@@ -83,8 +219,9 @@ class TouchAuxListRequester(TouchDialog):
         but_okay.clicked.connect(self.on_select)
         
         if TouchStyle_version >=1.3:
-            self.addConfirm()
-            self.setCancelButton()
+           cbc=self.addConfirm()
+           cbc.clicked.connect(self.on_cbc)
+           self.setCancelButton()
         else:    
             self.layout.addWidget(but_okay)
         
@@ -97,10 +234,12 @@ class TouchAuxListRequester(TouchDialog):
     def on_select(self):
         self.result = self.sender().text()
         self.close()
-     
+    
+    def on_cbc(self):
+        self.confbutclicked=True
+    
     def exec_(self):
         TouchDialog.exec_(self)
-        
         if self.confbutclicked==True: return True, self.itemlist.currentItem().text()
         if self.result==self.button: return True, self.itemlist.currentItem().text()
         return False, self.inititem
@@ -133,7 +272,6 @@ class TouchAuxRequestInteger(TouchDialog):
         
         self.result=""
         self.button=button
-        self.confbutclicked=False
         self.initvalue=initvalue
         
         self.layout=QVBoxLayout()
@@ -185,7 +323,8 @@ class TouchAuxRequestInteger(TouchDialog):
         but_okay.clicked.connect(self.on_select)
         
         if TouchStyle_version >=1.3:
-            self.addConfirm()
+            confirm=self.addConfirm()
+            confirm.clicked.connect(self.on_select)
             self.setCancelButton()
         else:    
             self.layout.addWidget(but_okay)
@@ -203,13 +342,13 @@ class TouchAuxRequestInteger(TouchDialog):
         self.actval.setText(str(self.dial.value()))
                 
     def on_select(self):
-        self.result = self.sender().text()
         self.close()
+        self.result = self.sender().text()
+        if self.result=="": self.result=self.button        
      
     def exec_(self):
         TouchDialog.exec_(self)
-        
-        if self.confbutclicked==True: return True, self.dial.value()
+        print(self.result)
         if self.result==self.button: return True, self.dial.value()
         return False, self.initvalue
       
@@ -231,16 +370,18 @@ class TouchAuxRequestText(TouchDialog):
         
         # the message
         msg=QLabel(message)
-        msg.setObjectName("smalllabel")
         msg.setWordWrap(True)
+        msg.setObjectName("smalllabel")
         msg.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(msg)
         self.layout.addStretch()
         
         # the text line
         self.txline=QLineEdit()
+        self.txline.setReadOnly(True)
         self.txline.setText(inittext)
-        
+        self.txline.setAlignment(Qt.AlignCenter)
+        self.txline.mousePressEvent = self.gettext
         self.layout.addWidget(self.txline)
         self.layout.addStretch()
         
@@ -250,13 +391,21 @@ class TouchAuxRequestText(TouchDialog):
         but_okay.clicked.connect(self.on_select)
         
         if TouchStyle_version >=1.3:
-            self.addConfirm()
+            cbc=self.addConfirm()
+            cbc.clicked.connect(self.on_cbc)
             self.setCancelButton()
         else:    
             self.layout.addWidget(but_okay)
         
         self.centralWidget.setLayout(self.layout)    
-        
+    
+    def gettext(self,msg):
+        kbd=TouchAuxKeyboard("Input",self.txline.text(),None)
+        self.txline.setText(kbd.exec_())
+    
+    def on_cbc(self):
+       self.confbutclicked=True
+       
     def on_select(self):
         self.result = self.sender().text()
         self.close()
@@ -309,6 +458,9 @@ class PicButton(QAbstractButton):
 
     def sizeHint(self):
         return self.pixmap.size()
+    
+    def changePixmap(self,np:QPixmap):
+       self.pixmap=np
 
 class TouchAuxMessageBox(TouchDialog):
     """ Versatile MessageBox for TouchUI
@@ -520,6 +672,106 @@ class TouchAuxMessageBox(TouchDialog):
         if self.text_okay==None and self.text_deny==None: return None,None
         elif self.result=="": return False,None
         else: return True,self.result
+
+class TouchAuxKeyboard(TouchDialog):
+    def __init__(self,title,strg,parent):
+        TouchDialog.__init__(self, title, parent)
+        
+        self.strg=strg
+        self.confbutpressed=False
+        
+        if TouchStyle_version >= 1.3:
+            confirmbutton = self.addConfirm()
+            confirmbutton.clicked.connect(self.on_confirmbutton)
+            self.setCancelButton()
+        
+        self.caps = True
+
+        self.layout = QVBoxLayout()
+
+        edit = QWidget()
+        edit.hbox = QHBoxLayout()
+        edit.hbox.setContentsMargins(0,0,0,0)
+
+        self.line = QLineEdit(strg)
+        self.line.setReadOnly(True)
+        self.line.setAlignment(Qt.AlignCenter)
+        edit.hbox.addWidget(self.line)
+        but = QPushButton()
+        pix = QPixmap(local + "erase.png")
+        icn = QIcon(pix)
+        but.setIcon(icn)
+        but.setIconSize(pix.size())
+        but.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding);
+        but.clicked.connect(self.key_erase)
+        edit.hbox.addWidget(but)
+
+        edit.setLayout(edit.hbox)
+        self.layout.addWidget(edit)
+
+        self.tab = QTabWidget()
+
+        for a in range(3):
+            page = QWidget()
+            page.grid = QGridLayout()
+            page.grid.setContentsMargins(0,0,0,0)
+
+            cnt = 0
+            for i in keys_upper[a]:
+                if i == "Aa":
+                    but = QPushButton()
+                    pix = QPixmap(local + "caps.png")
+                    icn = QIcon(pix)
+                    but.setIcon(icn)
+                    but.setIconSize(pix.size())
+                    but.clicked.connect(self.caps_changed)
+                else:
+                    but = QPushButton(i)
+                    but.clicked.connect(self.key_pressed)
+
+                but.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding);
+                page.grid.addWidget(but,cnt/4,cnt%4)
+                cnt+=1
+
+            page.setLayout(page.grid)
+            self.tab.addTab(page, keys_tab[a])
+
+        self.tab.tabBar().setExpanding(True);
+        self.tab.tabBar().setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding);
+        self.layout.addWidget(self.tab)
+
+        self.centralWidget.setLayout(self.layout)        
+
+    def key_erase(self):
+        self.line.setText(self.line.text()[:-1]) 
+
+    def key_pressed(self):
+        self.line.setText(self.line.text() + self.sender().text())
+
+        # user pressed the caps button. Exchange all button texts
+    def caps_changed(self):
+        self.caps = not self.caps
+        if self.caps:  keys = keys_upper
+        else:          keys = keys_lower
+
+        # exchange all characters
+        for i in range(self.tab.count()):
+            gw = self.tab.widget(i)
+            gl = gw.layout()
+            for j in range(gl.count()):
+                w = gl.itemAt(j).widget()
+                if keys[i][j] != "Aa":
+                    w.setText(keys[i][j]);
+    
+    def on_confirmbutton(self):
+        self.confbutpressed=True
+        
+    def exec_(self):
+        TouchDialog.exec_(self)
+        if self.confbutpressed: return self.line.text()
+        else:
+            if TouchStyle_version>1.3: return self.strg 
+            else: return self.line.text()
 
 if __name__ == "__main__":
     print("This is a python3 module containing stuff for ft TXT programming\n")

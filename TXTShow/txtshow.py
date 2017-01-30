@@ -18,11 +18,14 @@ local = os.path.dirname(os.path.realpath(__file__)) + "/"
 icondir = local + "icons/"
 picsdir = local + "pics/"
 ovldir = local + "overlay/"
+
+camera_present=TouchAuxFTCamIsPresent()
         
 class FtcGuiApplication(TouchApplication):
     def __init__(self, args):
         TouchApplication.__init__(self, args)
         
+        self.block=False
         self.maxpic=0
         self.maxdir=0
         self.currpic=0
@@ -45,11 +48,24 @@ class FtcGuiApplication(TouchApplication):
         self.scan_images()
         
         self.window.show()
-        
+                               
         #name="Olaf"
-        #msg=TouchAuxRequestText("Name:","Bitte Name eingeben:",name,"Okay")
+        #msg=TouchAuxRequestText("Text","Bitte Text eingeben:",name,"OK")
+        #msg=TouchAuxRequestInteger("Zahl:","Bitte Zahl eingeben:",0,-2,2,"Okay")
         #print(msg.exec_())
+        
+        #msg = TouchMessageBox("Tittel",self.parent())
+        #msg.addConfirm()
+        #msg.setText("Hallo Wält")
+        #msg.setPosButton("Plus")
+        #msg.setNegButton("Minus")
+        #print(msg.exec_())
+        #exit()
+        
+        # *********** check for camera presence **************
+        self.set_camera()
 
+        
         self.timer.start(self.timerdelay)
         self.currpic=-1
         self.on_timer() # erstes Bild laden!
@@ -62,7 +78,7 @@ class FtcGuiApplication(TouchApplication):
 
     def on_timer(self):
         self.currpic=self.currpic+1
-        
+        if self.currpic>=len(self.picstack): self.currpic=0        
         self.scan_images()
         if self.currpic>=len(self.picstack): self.currpic=0
         
@@ -96,6 +112,16 @@ class FtcGuiApplication(TouchApplication):
         p.end()
         self.layer_picture.setPixmap(target)
     
+    def set_camera(self):
+        if camera_present:
+          self.fw_camera.changePixmap(QPixmap(icondir+"camera-web.png"))
+          self.sw_camera.changePixmap(QPixmap(icondir+"camera-web.png"))
+          self.tw_camera.changePixmap(QPixmap(icondir+"camera-web.png"))
+        else:
+          self.fw_camera.changePixmap(QPixmap(icondir+"camera-web-disabled.png"))
+          self.sw_camera.changePixmap(QPixmap(icondir+"camera-web-disabled.png"))
+          self.tw_camera.changePixmap(QPixmap(icondir+"camera-web-disabled.png"))
+    
     def scan_directories(self):
         dirs = os.listdir(picsdir)
         
@@ -105,7 +131,15 @@ class FtcGuiApplication(TouchApplication):
             if os.path.isdir(picsdir + data): self.dirstack.append(data)
         
         self.dirstack.sort()
+    
         
+    def foto(self):
+        if camera_present:      
+            msg=TouchAuxFTCamPhotoRequester("Smile...",1024,768, "Snap")
+            img=msg.exec_()
+            void=img.save(picsdir+self.currdir+"/"+time.strftime("%y%m%d%H%M%S")+".png","PNG",80)
+
+
     def scan_images(self):
         
         self.picstack=list()
@@ -328,6 +362,7 @@ class FtcGuiApplication(TouchApplication):
         self.timer.stop()
         self.scan_directories()
         self.scan_images()
+        self.set_camera()
         self.layer_black.hide()
         self.layer_picture.hide()
         self.layer_overlay.hide()
@@ -349,7 +384,7 @@ class FtcGuiApplication(TouchApplication):
         msg=TouchAuxRequestInteger("Delay","Set slide show delay:",self.timerdelay/1000,2,30,"Set")
         (void,tim)=msg.exec_()
         self.timerdelay=tim*1000
-        
+    
     def FirstWidget(self):
         layout = QVBoxLayout()
         
@@ -393,8 +428,7 @@ class FtcGuiApplication(TouchApplication):
         bottbox.addWidget(fw_preturn)
         
         self.fw_camera = PicButton(QPixmap(icondir+"camera-web-disabled.png"))
-        self.fw_camera.setEnabled(False)
-        self.fw_camera.setDisabled(True)
+        self.fw_camera.clicked.connect(self.foto)
         bottbox.addWidget(self.fw_camera)
         bottbox.addStretch()
         
@@ -524,17 +558,7 @@ class FtcGuiApplication(TouchApplication):
             newname=self.clean(newname,12)
             os.rename(picsdir+self.currdir+"/"+self.picstack[self.currpic], picsdir+self.currdir+"/"+newname+extention)
             self.scan_images()
-            print("alt:",self.currpic)
             self.currpic=self.picstack.index(newname+extention)
-            print("neu:",self.currpic)
-        """
-        else:
-            msg=TouchAuxMessageBox("Info", self.parent())
-            msg.setText("Unable to rename image '"+self.picstack[self.currpic]+"' to '"+newname+extention+"'!")
-            msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-            msg.setPosButton("Okay")
-            (void,void)=msg.exec_() 
-        """    
             
     def SecondWidget(self):
         layout = QVBoxLayout()
@@ -586,8 +610,7 @@ class FtcGuiApplication(TouchApplication):
         bottbox.addWidget(sw_preturn)
         
         self.sw_camera = PicButton(QPixmap(icondir+"camera-web-disabled.png")) 
-        self.sw_camera.setEnabled(False)
-        self.sw_camera.setDisabled(True)
+        self.sw_camera.clicked.connect(self.foto)        
         bottbox.addWidget(self.sw_camera)
         bottbox.addStretch()
         
@@ -755,8 +778,7 @@ class FtcGuiApplication(TouchApplication):
         bottbox.addWidget(tw_preturn)
         
         self.tw_camera = PicButton(QPixmap(icondir+"camera-web-disabled.png"))
-        self.tw_camera.setEnabled(False)
-        self.tw_camera.setDisabled(True)
+        self.tw_camera.clicked.connect(self.foto)
         bottbox.addWidget(self.tw_camera)
         bottbox.addStretch()
         
