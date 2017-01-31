@@ -48,19 +48,23 @@ class FtcGuiApplication(TouchApplication):
         self.scan_images()
         
         self.window.show()
-                               
-        #name="Olaf"
-        #msg=TouchAuxRequestText("Text","Bitte Text eingeben:",name,"OK")
-        #msg=TouchAuxRequestInteger("Zahl:","Bitte Zahl eingeben:",0,-2,2,"Okay")
-        #print(msg.exec_())
         
-        #msg = TouchMessageBox("Tittel",self.parent())
-        #msg.addConfirm()
-        #msg.setText("Hallo Wält")
-        #msg.setPosButton("Plus")
-        #msg.setNegButton("Minus")
-        #print(msg.exec_())
-        #exit()
+        """mb=TouchAuxMultibutton("HRLager")
+        mb.setText("Steuerung:")
+        mb.setTextSize(3)
+        mb.setButtons([" Auslagern",""," Bestandsabfrage"," Status",""," Ende"])
+        mb.setBtnTextSize(3)
+        mb.leftAlignButtons()
+        print(mb.exec_())
+        mb=TouchAuxMultibutton("HRLager")
+        mb.setText("Auslagern:")
+        mb.setTextSize(3)
+        mb.setButtons([" rot : 3",""," weiß: 0",""," blau: 2"])
+        mb.setBtnTextSize(3)
+        mb.leftAlignButtons()
+        print(mb.exec_())
+        exit()
+        """
         
         # *********** check for camera presence **************
         self.set_camera()

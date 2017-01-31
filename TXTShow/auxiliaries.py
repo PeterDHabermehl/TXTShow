@@ -30,7 +30,108 @@ keys_lower = [
 
 
 
-
+class TouchAuxMultibutton(TouchDialog):
+    """ 
+        Opens up a window containing a list of items and returns the item selected by the user
+        
+        ******** function call **********
+        (succes:bool, result:str) = TouchAuxMultibutton(title:str, text:str, items:str[], parent:class)
+        
+        ******** parameters *************
+        
+        title:str       Title of the input window
+        text:strg       Optional text to be shown on top of the buttons
+        items:str[]     Array of string contains the list of items to be displayed
+        parent:class    Parent class
+        
+        ******** Return values **********
+        success:bool         True for user confirmed selection, False for user aborted selection
+        result:str           selected item in case of success==True or None in case of success=False
+    """
+    
+    def __init__(self,title:str,parent=None):
+        TouchDialog.__init__(self,title,parent)  
+                
+       
+        self.result=None
+        self.text=""
+        self.items=["Okay"]
+        self.textSize=3
+        self.btnTextSize=3
+        self.leftAlign=False
+        
+    def setText(self,text):
+        self.text=text
+        
+    def setButtons(self,items):
+        self.items=items
+           
+    def leftAlignButtons(self):
+        self.leftAlign=True
+    
+    def setTextSize(self,size):
+        if (size>0 and size<5): self.textSize=size
+        else: self.textSize=3
+    
+    def setBtnTextSize(self,size):
+        if (size>0 and size<5): self.btnTextSize=size
+        else: self.btnTextSize=3    
+    
+    def on_button(self):
+        self.result=self.sender().text()
+        self.close()
+        
+    def exec_(self):
+        self.layout=QVBoxLayout()
+        
+        # the message
+        if self.text:
+            mh=QHBoxLayout()
+            msg=QLabel(self.text)
+            if self.textSize==4:
+                msg.setObjectName("biglabel")
+            elif self.textSize==3:
+                msg.setObjectName("smalllabel")
+            elif self.textSize==2:
+                msg.setObjectName("smallerlabel")
+            elif self.textSize==1:
+                msg.setObjectName("tinylabel")
+            msg.setWordWrap(True)
+            msg.setAlignment(Qt.AlignCenter)
+            mh.addWidget(msg)
+            self.layout.addLayout(mh)
+        
+        self.layout.addStretch()
+        
+        for b in self.items:
+            k=QPushButton(b)
+            if self.btnTextSize==4:
+                k.setObjectName("biglabel")
+            elif self.btnTextSize==3:
+                k.setObjectName("smalllabel")
+            elif self.btnTextSize==2:
+                k.setObjectName("smallerlabel")
+            elif self.btnTextSize==1:
+                k.setObjectName("tinylabel")
+            if self.leftAlign:
+                k.setStyleSheet("Text-align:left")
+            
+            if b!="": k.clicked.connect(self.on_button)
+            else:
+                k.setEnabled(False)
+                k.setDisabled(True)
+                k.setMaximumHeight(6)
+                
+            self.layout.addWidget(k)
+        
+        if TouchStyle_version >=1.3:
+           self.setCancelButton()
+        
+        self.centralWidget.setLayout(self.layout) 
+        TouchDialog.exec_(self)
+        if self.result!=None: return True,self.result
+        return False,None
+      
 class TouchAuxFTCamPhotoRequester(TouchDialog):
     def __init__(self, title:str, width:int, height:int, button:str, parent=None):
         TouchDialog.__init__(self,title,parent)
@@ -87,10 +188,12 @@ def TouchAuxFTCamIsPresent():
         CAM_DEV=int(CAM_DEV)
      
     # initialize camera
-    cap = cv2.VideoCapture(CAM_DEV)       
-    if not cap.isOpened(): return false
-    else:                  return True
-
+    try:
+        cap = cv2.VideoCapture(CAM_DEV)       
+        if not cap.isOpened(): return False
+        else:                  return True
+    except: return False
+  
 class TouchAuxCamWidget(QWidget):
     def __init__(self,cwidth:int=320, fps:int=10, parent=None):
 
@@ -205,8 +308,8 @@ class TouchAuxListRequester(TouchDialog):
         parent:class    Parent class
         
         ******** Return values **********
-        success         True for user confirmed selection, False for user aborted selection
-        result          selected item in case of success==True or inititem in case of success==False
+        success:bool         True for user confirmed selection, False for user aborted selection
+        result:str           selected item in case of success==True or inititem in case of success==False
     """
     def __init__(self,title:str,message:str,items,inititem,button:str,parent=None):
         TouchDialog.__init__(self,title,parent)  
