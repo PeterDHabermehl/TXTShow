@@ -135,7 +135,7 @@ class FtcGuiApplication(TouchApplication):
         
     def foto(self):
         if camera_present:      
-            msg=TouchAuxFTCamPhotoRequester("Smile...",1024,768, "Snap")
+            msg=TouchAuxFTCamPhotoRequester("Smile...",960,720, "Snap")
             img=msg.exec_()
             void=img.save(picsdir+self.currdir+"/"+time.strftime("%y%m%d%H%M%S")+".png","PNG",80)
 
@@ -144,14 +144,18 @@ class FtcGuiApplication(TouchApplication):
         
         self.picstack=list()
         
+      
         if self.currdir in self.dirstack:
             self.picstack=os.listdir(picsdir+self.currdir)
             self.picstack.sort()
+    
         elif len(self.dirstack)>0:
             self.currdir=self.dirstack[0]
             self.picstack=os.listdir(picsdir+self.currdir)
             self.picstack.sort()
             self.currpic=-1
+        
+        
         if len(self.picstack)==0:
             self.picstack=list()
             if self.currdir != "":
@@ -176,12 +180,15 @@ class FtcGuiApplication(TouchApplication):
     
     def updatelayerimage(self):
         self.tw_album.setText(self.currdir)
-        if self.picstack[self.currpic]=="../fail.png":
-            self.fw_dial.setRange(0,0)
-            self.fw_dial.setValue(0)
-        else:   
+
+        try:
+            if self.picstack.index("../fail.png"):        #self.picstack[self.currpic]=="../fail.png":
+                self.fw_dial.setRange(0,0)
+                self.fw_dial.setValue(0)
+        except:   
             self.fw_dial.setRange(1,len(self.picstack))
             self.fw_dial.setValue(self.currpic+1)
+        
         if self.layer_picture.pixmap():
             self.sw_image.setPixmap(self.layer_picture.pixmap().scaled(QSize(232,194), Qt.KeepAspectRatio, Qt.SmoothTransformation).transformed(QTransform().rotate(90)))
 

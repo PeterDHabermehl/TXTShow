@@ -42,8 +42,20 @@ class TouchAuxFTCamPhotoRequester(TouchDialog):
         vbox=QVBoxLayout()
         
         self.cw=TouchAuxCamWidget(width,10)
-        
+        self.cw.setPhotoSize(width,height)
         vbox.addWidget(self.cw)
+        
+        hb=QHBoxLayout()
+        zout=QPushButton(" - ")
+        zout.clicked.connect(self.on_zoom_out)
+        hb.addWidget(zout)
+        zin=QPushButton(" + ")
+        zin.clicked.connect(self.on_zoom_in)
+        #hb.addStretch()
+        hb.addWidget(zin)
+        
+        vbox.addLayout(hb)
+        
         vbox.addStretch()
         
         znap=QPushButton()
@@ -52,6 +64,12 @@ class TouchAuxFTCamPhotoRequester(TouchDialog):
         vbox.addWidget(znap)
         
         self.centralWidget.setLayout(vbox) 
+    
+    def on_zoom_in(self):
+        self.cw.setZoom(True)
+    
+    def on_zoom_out(self):
+        self.cw.setZoom(False)
     
     def on_photo(self):
         self.img=self.cw.getPhoto() 
@@ -78,7 +96,12 @@ class TouchAuxCamWidget(QWidget):
 
         super(TouchAuxCamWidget, self).__init__(parent)
         
+        self.zoom=False
+        
         self.cwidth=cwidth
+        
+        self.pwidth=cwidth
+        self.pheight=cwidth*3/4
         
         CAM_DEV = os.environ.get('FTC_CAM')
         if CAM_DEV == None:
@@ -101,6 +124,9 @@ class TouchAuxCamWidget(QWidget):
         qsp.setHeightForWidth(True)
         self.setSizePolicy(qsp)
 
+    def setZoom(self,zoom:bool):
+        self.zoom=zoom
+
     def sizeHint(self):
         try:
             return QSize(self.cwidth,self.cwidth*3/4)
@@ -115,7 +141,13 @@ class TouchAuxCamWidget(QWidget):
         self.frame = self.cap.read()[1]
 
         # expand/shrink to widget size
-        wsize = (self.size().width(), self.size().height())
+        if self.zoom:
+            wsize = (self.size().width()*2, self.size().height()*2)
+            rect=QRect(self.size().width()/2,self.size().height()/2,self.size().width(), self.size().height())
+        else:
+            wsize = (self.size().width(), self.size().height())
+            rect=QRect(0,0,self.size().width(), self.size().height())
+        
         self.cvImage = cv2.resize(self.frame, wsize)
 
         height, width, byteValue = self.cvImage.shape
@@ -123,11 +155,18 @@ class TouchAuxCamWidget(QWidget):
 
         cv2.cvtColor(self.cvImage, cv2.COLOR_BGR2RGB, self.cvImage)
         self.mQImage = QImage(self.cvImage, width, height,
-                              bytes_per_line, QImage.Format_RGB888)
-
+                              bytes_per_line, QImage.Format_RGB888).copy(rect)
+    
+    def setPhotoSize(self,width,height):
+        self.pwidth=width
+        self.pheight=height
+        
     def getPhoto(self):
         frame = self.cap.read()[1]
-
+        
+        wsize=(self.pwidth,self.pheight)
+        self.frame = cv2.resize(self.frame, wsize)
+        
         height, width, byteValue = frame.shape
         bytes_per_line = byteValue * width
 
