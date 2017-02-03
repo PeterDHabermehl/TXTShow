@@ -52,10 +52,10 @@ def scan_directories():
     
     dirstack.sort()
 
-def save_uploaded_file():
+"""def save_uploaded_file():
     form = cgi.FieldStorage()
     if "datei" not in form:
-        return False,"No appfile"
+        return False,"No file"
 
     fileitem = form["datei"]
     if not fileitem.file or not fileitem.filename:
@@ -63,10 +63,14 @@ def save_uploaded_file():
 
     filename = fileitem.filename
     
-    print("Writing file to " + filename + "<br/>")
-    open(localdir+filename, 'wb').write(fileitem.file.read())
+    if not os.path.exists(localdir+filename):
+        print("Writing file to " + filename + "<br/>")
+        open(localdir+filename, 'wb').write(fileitem.file.read())
 
-    return True,filename
+        return True,filename
+    else: 
+        return False,None
+"""
 
 def create_html_head():
     print('Content-Type: text/html')
@@ -173,14 +177,15 @@ def save_uploaded_file(tdir):
     if not fileitem.file or not fileitem.filename:
         return False,"No valid file"
 
-    filename = fileitem.filename
+    filename = fileitem.filename    
     
-    #print("Writing file to " + filename + "<br/>")
-    open(tdir+filename, 'wb').write(fileitem.file.read())
-
-    os.chmod(tdir+filename,0o666)
+    if not os.path.exists(tdir+filename):
+        open(tdir+filename, 'wb').write(fileitem.file.read())
+        os.chmod(tdir+filename,0o666)
+        return True, filename
+    else:
+        return False, None
     
-    return True,filename
 
 def clean(newdir,maxlen):
     res=""
@@ -206,9 +211,7 @@ elif "rd" in form:
       print("</p><b>"+form["rd"].value+"</b> is the last existing Album and can not be removed.")
       print("</p><a href="+'"'+"index.py"+'">'+"Back to album list</a></html></head>") 
 elif "rp" in form:
-    #create_html_head()
     dummy = os.remove(hostdir+"pics/" + form["directory"].value+"/"+form["rp"].value)
-    #print("</html></html>")
     create_html_output_pics(form["directory"].value) 
 elif "rendir" in form:
      if clean(form["rendir"].value,12)!="":
@@ -226,8 +229,14 @@ elif "newdir" in form:
        create_html_output_dirs()
 elif "datei" in form:
     upload()
-    save_uploaded_file("pics/"+form["directory"].value+"/")
-    create_html_output_pics(form["directory"].value)
+
+    (success,file)=save_uploaded_file("pics/"+form["directory"].value+"/")
+    if success==True:
+        create_html_output_pics(form["directory"].value)
+    else:
+        create_html_head()
+        print("</p>Error uploading image! File already exists or no memory available.")
+        print("</p><a href="+'"'+"index.py"+'">'+"Back to album list</a></html></head>") 
 else:
     scan_directories()
     create_html_output_dirs()
