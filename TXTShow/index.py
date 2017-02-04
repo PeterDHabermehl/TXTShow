@@ -48,7 +48,7 @@ def scan_directories():
     dirstack=list()
     
     for data in dirs:
-        if os.path.isdir(picsdir + data): dirstack.append(data)
+        if os.path.isdir(picsdir + data) and not os.path.isfile(picsdir + data + "/.hidden"): dirstack.append(data)
     
     dirstack.sort()
 

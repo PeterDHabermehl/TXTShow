@@ -49,22 +49,10 @@ class FtcGuiApplication(TouchApplication):
         
         self.window.show()
         
-        """mb=TouchAuxMultibutton("HRLager")
-        mb.setText("Steuerung:")
-        mb.setTextSize(3)
-        mb.setButtons([" Auslagern",""," Bestandsabfrage"," Status",""," Ende"])
-        mb.setBtnTextSize(3)
-        mb.leftAlignButtons()
-        print(mb.exec_())
-        mb=TouchAuxMultibutton("HRLager")
-        mb.setText("Auslagern:")
-        mb.setTextSize(3)
-        mb.setButtons([" rot : 3",""," weiß: 0",""," blau: 2"])
-        mb.setBtnTextSize(3)
-        mb.leftAlignButtons()
-        print(mb.exec_())
-        exit()
-        """
+        #mb = TouchAuxKeyboard("A","B",self.parent())
+        #a=mb.exec_()
+        #print(a)
+        #exit()
         
         # *********** check for camera presence **************
         self.set_camera()
@@ -126,14 +114,20 @@ class FtcGuiApplication(TouchApplication):
           self.sw_camera.changePixmap(QPixmap(icondir+"camera-web-disabled.png"))
           self.tw_camera.changePixmap(QPixmap(icondir+"camera-web-disabled.png"))
     
-    def scan_directories(self):
+    def scan_directories(self, hidden=False):
         dirs = os.listdir(picsdir)
         
         self.dirstack=list()
         
         for data in dirs:
-            if os.path.isdir(picsdir + data): self.dirstack.append(data)
-        
+            if os.path.isdir(picsdir + data):
+                if hidden: 
+                  if os.path.isfile(picsdir + data + "/.hidden"):
+                    self.dirstack.append(data)   
+                else:
+                  if not os.path.isfile(picsdir + data + "/.hidden"):
+                     self.dirstack.append(data)
+                     
         self.dirstack.sort()
     
         
@@ -185,17 +179,18 @@ class FtcGuiApplication(TouchApplication):
     def updatelayerimage(self):
         self.tw_album.setText(self.currdir)
 
-        try:
-            if self.picstack.index("../fail.png"):        #self.picstack[self.currpic]=="../fail.png":
-                self.fw_dial.setRange(0,0)
-                self.fw_dial.setValue(0)
-        except:   
+        if self.picstack[0]=="../fail.png":
+            self.fw_dial.setRange(0,0)
+            self.fw_dial.setValue(0)
+            self.sw_image.setPixmap(QPixmap())
+        else:
             self.fw_dial.setRange(1,len(self.picstack))
             self.fw_dial.setValue(self.currpic+1)
-        
-        if self.layer_picture.pixmap():
-            self.sw_image.setPixmap(self.layer_picture.pixmap().scaled(QSize(232,194), Qt.KeepAspectRatio, Qt.SmoothTransformation).transformed(QTransform().rotate(90)))
+            if self.layer_picture.pixmap():
+                self.sw_image.setPixmap(self.layer_picture.pixmap().scaled(QSize(232,194), Qt.KeepAspectRatio, Qt.SmoothTransformation).transformed(QTransform().rotate(90)))
 
+            
+        
     def switchback(self):
         self.currpic=self.currpic-1
         self.on_timer()
@@ -779,7 +774,7 @@ class FtcGuiApplication(TouchApplication):
         bottbox = QHBoxLayout()
         
         self.tw_pback = PicButton(QPixmap(icondir+"go-previous.png"))
-        
+        self.tw_pback.clicked.connect(self.switchback)
         bottbox.addWidget(self.tw_pback)
         bottbox.addStretch()
         
@@ -793,14 +788,88 @@ class FtcGuiApplication(TouchApplication):
         bottbox.addWidget(self.tw_camera)
         bottbox.addStretch()
         
-        self.tw_pfwd = PicButton(QPixmap(icondir+"go-next-disabled.png"))
-        bottbox.addWidget(self.tw_pfwd)
-        self.tw_pback.clicked.connect(self.switchback)
+        self.tw_wizard = PicButton(QPixmap(icondir+"tools-wizard.png"))
+        bottbox.addWidget(self.tw_wizard)
+        self.tw_wizard.clicked.connect(self.on_wizard_clicked)
         
         layout.addLayout(bottbox)
         
         self.myStackLayout3.setLayout(layout)
    
-                             
+    def on_wizard_clicked(self):
+   
+        mbu = TouchAuxMultibutton("Wizard",self.parent())
+        mbu.setTextSize(2)
+        mbu.setText("Do you want to hide the current album '"+self.currdir+"' or do you want to show already hidden albums?")
+        mbu.setButtons(["Hide","Show"])
+        
+        (res,but)=mbu.exec_()
+        
+        if but=="Hide":
+            if len(self.dirstack)>1:
+                p=TouchAuxKeyboard("Key?","",None)
+                pw1=p.exec_()
+
+                p=TouchAuxKeyboard("Confirm","",self.parent())
+                pw2=p.exec_()
+                  
+                if pw1==pw2:
+               
+                    f = open(picsdir+self.currdir+"/.hidden", "w")
+                    if f != None:
+                        f.write(pw1)
+                        f.close()
+                        self.scan_directories()
+                        self.scan_images()
+                else:
+                    msg=TouchAuxMessageBox("Error", self.parent())
+                    msg.setText("Keys did not match! Try again.")
+                    msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                    msg.setPosButton("Okay")
+                    (void,void)=msg.exec_()
+                
+            else:
+                msg=TouchAuxMessageBox("Info", self.parent())
+                msg.setText("'"+self.currdir+"' is the last album and can not be hidden.")
+                msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                msg.setPosButton("Okay")
+                (void,void)=msg.exec_()
+        elif but=="Show":
+            
+            # scan for hidden scan_directories
+            self.scan_directories(True)
+            
+            if len(self.dirstack)>0:
+            
+                msg=TouchAuxListRequester("Show", "Select album to unlock:", self.dirstack, self.dirstack[0],"Show",self.parent())
+                (res,showdir)=msg.exec_()
+                if res:
+                    p=TouchAuxKeyboard("Key?","",None)
+                    pw1=p.exec_()
+                    
+                    f = open(picsdir + showdir + "/.hidden", "r")
+                    pw2=f.read()
+                    f.close  
+                    
+                    if pw1==pw2:
+                        os.remove(picsdir + showdir + "/.hidden")
+                        self.currdir=showdir
+                        self.scan_directories()
+                    else:
+                        msg=TouchAuxMessageBox("Info", self.parent())
+                        msg.setText("Key not matching.")
+                        msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                        msg.setPosButton("Okay")
+                        (void,void)=msg.exec_()
+            else:
+                msg=TouchAuxMessageBox("Info", self.parent())
+                msg.setText("No hidden albums found.")
+                msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
+                msg.setPosButton("Okay")
+                (void,void)=msg.exec_()
+                
+            self.scan_directories()
+            self.scan_images()
+            
 if __name__ == "__main__":
     FtcGuiApplication(sys.argv)
