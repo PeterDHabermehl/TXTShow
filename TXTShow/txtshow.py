@@ -25,6 +25,12 @@ class FtcGuiApplication(TouchApplication):
     def __init__(self, args):
         TouchApplication.__init__(self, args)
         
+        translator = QTranslator()
+        path = os.path.dirname(os.path.realpath(__file__))
+        translator.load(QLocale.system(), os.path.join(path, "txtshow_"))
+        self.installTranslator(translator)
+        
+        
         self.block=False
         self.maxpic=0
         self.maxdir=0
@@ -133,7 +139,7 @@ class FtcGuiApplication(TouchApplication):
         
     def foto(self):
         if camera_present:      
-            msg=TouchAuxFTCamPhotoRequester("Smile...",960,720, "Snap")
+            msg=TouchAuxFTCamPhotoRequester(QCoreApplication.translate("context","Smile..."),960,720, QCoreApplication.translate("context","Snap"))
             img=msg.exec_()
             void=img.save(picsdir+self.currdir+"/"+time.strftime("%y%m%d%H%M%S")+".png","PNG",80)
 
@@ -387,7 +393,7 @@ class FtcGuiApplication(TouchApplication):
         exit()
         
     def set_delay(self):
-        msg=TouchAuxRequestInteger("Delay","Set slide show delay:",self.timerdelay/1000,2,30,"Set")
+        msg=TouchAuxRequestInteger(QCoreApplication.translate("context","Delay"),QCoreApplication.translate("context","Set slide show delay:"),self.timerdelay/1000,2,30,QCoreApplication.translate("context","Set"))
         (void,tim)=msg.exec_()
         self.timerdelay=tim*1000
     
@@ -462,22 +468,22 @@ class FtcGuiApplication(TouchApplication):
     def sw_on_clicked_del(self):
         
         if self.picstack[self.currpic]=="../fail.png":
-            msg=TouchAuxMessageBox("Info", self.parent())
-            msg.setText("'"+self.currdir+"' is already empty.")
+            msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+            msg.setText("'"+self.currdir+"' "+QCoreApplication.translate("context","is already empty."))
             msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-            msg.setPosButton("Okay")
+            msg.setPosButton(QCoreApplication.translate("context","Okay"))
             (void,void)=msg.exec_()
             return
       
-        msg=TouchAuxMessageBox("Warning", self.parent())
-        msg.setText("Permanently delete image '"+self.picstack[self.currpic]+"' from album '"+self.currdir+"'?")
+        msg=TouchAuxMessageBox(QCoreApplication.translate("context","Warning"), self.parent())
+        msg.setText(QCoreApplication.translate("context","Permanently delete image ")+"'"+self.picstack[self.currpic]+"' "+QCoreApplication.translate("context","from album")+" '"+self.currdir+"'?")
         msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-        msg.setPosButton("Yes")
-        msg.setNegButton("Cancel")
+        msg.setPosButton(QCoreApplication.translate("context","Yes"))
+        msg.setNegButton(QCoreApplication.translate("context","Cancel"))
         msg.buttonsVertical(False)
         (success,res)=msg.exec_()
         
-        if res=="Yes":
+        if res==QCoreApplication.translate("context","Yes"):
           cm="rm "+picsdir+self.currdir+"/"+self.picstack[self.currpic]
           void=run_program(cm)          
           self.scan_directories()
@@ -487,53 +493,53 @@ class FtcGuiApplication(TouchApplication):
           
     def sw_on_clicked_copy(self):
         if self.picstack[self.currpic]=="../fail.png":
-            msg=TouchAuxMessageBox("Info", self.parent())
-            msg.setText("'"+self.currdir+"' is empty. Nothing to copy.")
+            msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+            msg.setText("'"+self.currdir+"' "+QCoreApplication.translate("context","is empty. Nothing to copy."))
             msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-            msg.setPosButton("Okay")
+            msg.setPosButton(QCoreApplication.translate("context","Okay"))
             (void,void)=msg.exec_()
             return
           
-        req=TouchAuxListRequester("Copy","'"+self.picstack[self.currpic]+"' to album:",self.dirstack,self.currdir,"Copy")  
+        req=TouchAuxListRequester(QCoreApplication.translate("context","Copy"),"'"+self.picstack[self.currpic]+"' "+QCoreApplication.translate("context","to album:"),self.dirstack,self.currdir,QCoreApplication.translate("context","Copy"))  
         (success, destdir)=req.exec_()
    
         if success:
             if not(self.currdir==destdir):
                 if os.path.isfile(picsdir+destdir+"/"+self.picstack[self.currpic]):
-                    msg=TouchAuxMessageBox("Info", self.parent())
-                    msg.setText("Image '"+self.picstack[self.currpic]+"' already exists in album '"+destdir+"'!")
+                    msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+                    msg.setText(QCoreApplication.translate("context","Image") + " '"+self.picstack[self.currpic]+"' "+QCoreApplication.translate("context","already exists in album") + " '"+destdir+"'!")
                     msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                    msg.setPosButton("Okay")
+                    msg.setPosButton(QCoreApplication.translate("context","Okay"))
                     (void,void)=msg.exec_()
                 else:
                     cm="cp "+picsdir+self.currdir+"/"+self.picstack[self.currpic]+" "+picsdir+destdir+"/"
                     void=run_program(cm)
             else:
-                msg=TouchAuxMessageBox("Info", self.parent())
-                msg.setText("Unable to copy image '"+self.picstack[self.currpic]+"' to album '"+destdir+"'!")
+                msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+                msg.setText(QCoreApplication.translate("context","Unable to copy image")+" '"+self.picstack[self.currpic]+"' "+QCoreApplication.translate("context","to album")+" '"+destdir+"'!")
                 msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                msg.setPosButton("Okay")
+                msg.setPosButton(QCoreApplication.translate("context","Okay"))
                 (void,void)=msg.exec_()
     
     def sw_on_clicked_move(self):
         if self.picstack[self.currpic]=="../fail.png":
-            msg=TouchAuxMessageBox("Info", self.parent())
-            msg.setText("'"+self.currdir+"' is empty. Nothing to move.")
+            msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+            msg.setText("'"+self.currdir+"' "+QCoreApplication.translate("context","is empty. Nothing to move."))
             msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-            msg.setPosButton("Okay")
+            msg.setPosButton(QCoreApplication.translate("context","Okay"))
             (void,void)=msg.exec_()
             return
           
-        req=TouchAuxListRequester("Move","'"+self.picstack[self.currpic]+"' to album:",self.dirstack,self.currdir,"Move")  
+        req=TouchAuxListRequester(QCoreApplication.translate("context","Move"),"'"+self.picstack[self.currpic]+"' "+QCoreApplication.translate("context","to album:"),self.dirstack,self.currdir,QCoreApplication.translate("context","Move"))  
         (success, destdir)=req.exec_()
        
         if success:
             if not(self.currdir==destdir):
                 if os.path.isfile(picsdir+destdir+"/"+self.picstack[self.currpic]):
-                    msg=TouchAuxMessageBox("Info", self.parent())
-                    msg.setText("Image '"+self.picstack[self.currpic]+"' already exists in album '"+destdir+"'!")
+                    msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+                    msg.setText(QCoreApplication.translate("context","Image")+" '"+self.picstack[self.currpic]+"' "+QCoreApplication.translate("context","already exists in album")+" '"+destdir+"'!")
                     msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                    msg.setPosButton("Okay")
+                    msg.setPosButton(QCoreApplication.translate("context","Okay"))
                     (void,void)=msg.exec_()
                 else:
                     cm="mv "+picsdir+self.currdir+"/"+self.picstack[self.currpic]+" "+picsdir+destdir+"/"
@@ -543,22 +549,22 @@ class FtcGuiApplication(TouchApplication):
                     self.currpic=self.currpic-1
                     self.on_timer()
             else:
-                msg=TouchAuxMessageBox("Info", self.parent())
-                msg.setText("Unable to move image '"+self.picstack[self.currpic]+"' to album '"+destdir+"'!")
+                msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+                msg.setText(QCoreApplication.translate("context","Unable to move image")+" '"+self.picstack[self.currpic]+"' "+QCoreApplication.translate("context","to album")+" '"+destdir+"'!")
                 msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                msg.setPosButton("Okay")
+                msg.setPosButton(QCoreApplication.translate("context","Okay"))
                 (void,void)=msg.exec_() 
         
     def sw_on_clicked_renImage(self):
         if self.picstack[self.currpic]=="../fail.png":
-            msg=TouchAuxMessageBox("Info", self.parent())
-            msg.setText("'"+self.currdir+"' is empty. Nothing to rename.")
+            msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+            msg.setText("'"+self.currdir+"' "+QCoreApplication.translate("context","is empty. Nothing to rename."))
             msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-            msg.setPosButton("Okay")
+            msg.setPosButton(QCoreApplication.translate("context","Okay"))
             (void,void)=msg.exec_()
             return
         (base,extention)=os.path.splitext(self.picstack[self.currpic])
-        msg=TouchAuxRequestText("Rename", "Please enter new name for '"+self.picstack[self.currpic]+"':", base, "Rename", self.parent())
+        msg=TouchAuxRequestText(QCoreApplication.translate("context","Rename"), QCoreApplication.translate("context","Please enter new name for")+" '"+self.picstack[self.currpic]+"':", base, QCoreApplication.translate("context","Rename"), self.parent())
         (success,newname)=msg.exec_()
         if success and not newname==base:
             newname=self.clean(newname,12)
@@ -570,7 +576,6 @@ class FtcGuiApplication(TouchApplication):
         layout = QVBoxLayout()
         
         self.sw_image=QLabel()
-        #self.sw_image.setStyleSheet("border: 1px solid; border-style: outset")
         self.sw_image.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.sw_image)
         
@@ -631,7 +636,7 @@ class FtcGuiApplication(TouchApplication):
 
     
     def selectalbum(self,click):
-      req=TouchAuxListRequester("Select","Album to open:",self.dirstack,self.currdir,"Open")  
+      req=TouchAuxListRequester(QCoreApplication.translate("context","Select"),QCoreApplication.translate("context","Album to open:"),self.dirstack,self.currdir,QCoreApplication.translate("context","Open"))  
       (void, self.currdir)=req.exec_()
       self.tw_album.setText(self.currdir)
       self.scan_images()
@@ -646,25 +651,25 @@ class FtcGuiApplication(TouchApplication):
         return res[:maxlen]
       
     def addAlbum(self):
-        msg=TouchAuxRequestText("New", "Album to be created:", "MyAlbum", "Create", self.parent())
+        msg=TouchAuxRequestText(QCoreApplication.translate("context","New"), QCoreApplication.translate("context","Album to be created:"), QCoreApplication.translate("context","MyAlbum"), QCoreApplication.translate("context","Create"), self.parent())
         (success,newdir)=msg.exec_()
         if success:
             newdir=self.clean(newdir,12)
             if newdir in self.dirstack:
-                msg=TouchAuxMessageBox("Info", self.parent())
-                msg.setText("'"+newdir+"' already exists! Could not create.")
+                msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+                msg.setText("'"+newdir+"' "+QCoreApplication.translate("context","already exists! Could not create."))
                 msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                msg.setPosButton("Okay")
+                msg.setPosButton(QCoreApplication.translate("context","Okay"))
                 (void,void)=msg.exec_()
             else:
                 try:
                     os.mkdir(picsdir + newdir)
                     self.currdir=newdir
                 except:
-                    msg=TouchAuxMessageBox("Info", self.parent())
-                    msg.setText("'"+newdir+"' could not be created.")
+                    msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+                    msg.setText("'"+newdir+"' "+QCoreApplication.translate("context","could not be created."))
                     msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                    msg.setPosButton("Okay")
+                    msg.setPosButton(QCoreApplication.translate("context","Okay"))
                     (void,void)=msg.exec_()
                 
                 self.scan_directories()
@@ -673,51 +678,51 @@ class FtcGuiApplication(TouchApplication):
 
     def delAlbum(self):
         if len(self.dirstack)>1:
-            msg=TouchAuxMessageBox("Warning", self.parent())
+            msg=TouchAuxMessageBox(QCoreApplication.translate("context","Warning"), self.parent())
             
             if self.picstack[0]=="../fail.png": n=0
             else: n=len(self.picstack)
             
-            msg.setText("Really permanently delete the album '"+self.currdir+"' with "+str(n)+" images?")
+            msg.setText(QCoreApplication.translate("context","Really permanently delete the album")+" '"+self.currdir+"' "+QCoreApplication.translate("context","with")+" "+str(n)+" "+QCoreApplication.translate("context","images?"))
             msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-            msg.setPosButton("Yes")
-            msg.setNegButton("Cancel")
+            msg.setPosButton(QCoreApplication.translate("context","Yes"))
+            msg.setNegButton(QCoreApplication.translate("context","Cancel"))
             msg.buttonsVertical(False)
             (void,res)=msg.exec_()
-            if res=="Yes":
+            if res==QCoreApplication.translate("context","Yes"):
               cm="rm -r "+picsdir+self.currdir+"/"
               void=run_program(cm)
               self.scan_directories()
               self.scan_images()
               self.on_timer()
         else:
-            msg=TouchAuxMessageBox("Info", self.parent())
-            msg.setText("'"+self.currdir+"' is the last album and can not be deleted.")
+            msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+            msg.setText("'"+self.currdir+"' "+QCoreApplication.translate("context","is the last album and can not be deleted."))
             msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-            msg.setPosButton("Okay")
+            msg.setPosButton(QCoreApplication.translate("context","Okay"))
             (void,void)=msg.exec_()
           
       
     def renAlbum(self):
-        msg=TouchAuxRequestText("Rename", "Please enter new name for '"+self.currdir+"':", self.currdir, "Rename", self.parent())
+        msg=TouchAuxRequestText(QCoreApplication.translate("context","Rename"), QCoreApplication.translate("context","Please enter new name for")+" '"+self.currdir+"':", self.currdir, QCoreApplication.translate("context","Rename"), self.parent())
         (success,newdir)=msg.exec_()
         if success:
             newdir=self.clean(newdir,12)
             if newdir in self.dirstack:
-                msg=TouchAuxMessageBox("Info", self.parent())
-                msg.setText("'"+newdir+"' already exists! Could not rename.")
+                msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+                msg.setText("'"+newdir+"' "+QCoreApplication.translate("context","already exists! Could not rename."))
                 msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                msg.setPosButton("Okay")
+                msg.setPosButton(QCoreApplication.translate("context","Okay"))
                 (void,void)=msg.exec_()
             else:
                 try:
                     os.rename(picsdir+self.currdir, picsdir + newdir)
                     self.currdir=newdir
                 except:
-                    msg=TouchAuxMessageBox("Info", self.parent())
-                    msg.setText("'"+self.currdir+"' could not be renamed.")
+                    msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+                    msg.setText("'"+self.currdir+"' "+QCoreApplication.translate("context","could not be renamed."))
                     msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                    msg.setPosButton("Okay")
+                    msg.setPosButton(QCoreApplication.translate("context","Okay"))
                     (void,void)=msg.exec_()
                 
                 self.scan_directories()
@@ -730,7 +735,7 @@ class FtcGuiApplication(TouchApplication):
      
         labox=QHBoxLayout()
         lab=QLabel()
-        lab.setText("Album:")
+        lab.setText(QCoreApplication.translate("context","Album:"))
         labox.addWidget(lab)
         labox.addStretch()
         
@@ -741,6 +746,7 @@ class FtcGuiApplication(TouchApplication):
         
         self.tw_album = QLineEdit()
         self.tw_album.setReadOnly(True)
+        self.tw_album.mousePressEvent=self.selectalbum
         self.tw_album.setText(self.currdir)
 
         layout.addWidget(self.tw_album)
@@ -798,19 +804,19 @@ class FtcGuiApplication(TouchApplication):
    
     def on_wizard_clicked(self):
    
-        mbu = TouchAuxMultibutton("Wizard",self.parent())
+        mbu = TouchAuxMultibutton(QCoreApplication.translate("context","Wizard"),self.parent())
         mbu.setTextSize(2)
-        mbu.setText("Do you want to hide the current album '"+self.currdir+"' or do you want to show already hidden albums?")
-        mbu.setButtons(["Hide","Show"])
+        mbu.setText(QCoreApplication.translate("context","Do you want to hide the current album")+" '"+self.currdir+"' "+QCoreApplication.translate("context","or do you want to show already hidden albums?"))
+        mbu.setButtons([QCoreApplication.translate("context","Hide"),QCoreApplication.translate("context","Show")])
         
         (res,but)=mbu.exec_()
         
-        if but=="Hide":
+        if but==QCoreApplication.translate("context","Hide"):
             if len(self.dirstack)>1:
-                p=TouchAuxKeyboard("Key?","",None)
+                p=TouchAuxKeyboard(QCoreApplication.translate("context","Key?"),"",self.parent())
                 pw1=p.exec_()
 
-                p=TouchAuxKeyboard("Confirm","",self.parent())
+                p=TouchAuxKeyboard(QCoreApplication.translate("context","Confirm"),"",self.parent())
                 pw2=p.exec_()
                   
                 if pw1==pw2:
@@ -822,29 +828,29 @@ class FtcGuiApplication(TouchApplication):
                         self.scan_directories()
                         self.scan_images()
                 else:
-                    msg=TouchAuxMessageBox("Error", self.parent())
-                    msg.setText("Keys did not match! Try again.")
+                    msg=TouchAuxMessageBox(QCoreApplication.translate("context","Error"), self.parent())
+                    msg.setText(QCoreApplication.translate("context","Keys did not match! Try again."))
                     msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                    msg.setPosButton("Okay")
+                    msg.setPosButton(QCoreApplication.translate("context","Okay"))
                     (void,void)=msg.exec_()
                 
             else:
-                msg=TouchAuxMessageBox("Info", self.parent())
-                msg.setText("'"+self.currdir+"' is the last album and can not be hidden.")
+                msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+                msg.setText("'"+self.currdir+"' "+QCoreApplication.translate("context","is the last album and can not be hidden."))
                 msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                msg.setPosButton("Okay")
+                msg.setPosButton(QCoreApplication.translate("context","Okay"))
                 (void,void)=msg.exec_()
-        elif but=="Show":
+        elif but==QCoreApplication.translate("context","Show"):
             
             # scan for hidden scan_directories
             self.scan_directories(True)
             
             if len(self.dirstack)>0:
             
-                msg=TouchAuxListRequester("Show", "Select album to unlock:", self.dirstack, self.dirstack[0],"Show",self.parent())
+                msg=TouchAuxListRequester(QCoreApplication.translate("context","Show"), QCoreApplication.translate("context","Select album to unlock:"), self.dirstack, self.dirstack[0],QCoreApplication.translate("context","Show"),self.parent())
                 (res,showdir)=msg.exec_()
                 if res:
-                    p=TouchAuxKeyboard("Key?","",None)
+                    p=TouchAuxKeyboard(QCoreApplication.translate("context","Key?"),"",None)
                     pw1=p.exec_()
                     
                     f = open(picsdir + showdir + "/.hidden", "r")
@@ -856,16 +862,16 @@ class FtcGuiApplication(TouchApplication):
                         self.currdir=showdir
                         self.scan_directories()
                     else:
-                        msg=TouchAuxMessageBox("Info", self.parent())
-                        msg.setText("Key not matching.")
+                        msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+                        msg.setText(QCoreApplication.translate("context","Key not matching."))
                         msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                        msg.setPosButton("Okay")
+                        msg.setPosButton(QCoreApplication.translate("context","Okay"))
                         (void,void)=msg.exec_()
             else:
-                msg=TouchAuxMessageBox("Info", self.parent())
-                msg.setText("No hidden albums found.")
+                msg=TouchAuxMessageBox(QCoreApplication.translate("context","Info"), self.parent())
+                msg.setText(QCoreApplication.translate("context","No hidden albums found."))
                 msg.addPixmap(QPixmap(icondir + "dialog-warning.png"))
-                msg.setPosButton("Okay")
+                msg.setPosButton(QCoreApplication.translate("context","Okay"))
                 (void,void)=msg.exec_()
                 
             self.scan_directories()
