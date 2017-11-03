@@ -5,7 +5,7 @@
 import sys, time, os
 from TouchStyle import *
 from threading import Timer
-from auxiliaries import *
+from TouchAuxiliary import *
 
 try:
     if TouchStyle_version<1.2:
@@ -433,7 +433,7 @@ class FtcGuiApplication(TouchApplication):
         midbox = QHBoxLayout()
   
         #midbox.addStretch()
-        self.fw_bckbutt = PicButton(QPixmap(icondir+"arrow-left.png"))
+        self.fw_bckbutt = TouchAuxPicButton(QPixmap(icondir+"arrow-left.png"))
         self.fw_bckbutt.setMinimumHeight(50)
         self.fw_bckbutt.clicked.connect(self.fw_bckbutt_clicked)
         midbox.addWidget(self.fw_bckbutt)
@@ -444,7 +444,7 @@ class FtcGuiApplication(TouchApplication):
         midbox.addWidget(self.fw_current)
         midbox.addStretch()
         
-        self.fw_fwdbutt = PicButton(QPixmap(icondir+"arrow-right.png"))
+        self.fw_fwdbutt = TouchAuxPicButton(QPixmap(icondir+"arrow-right.png"))
         self.fw_fwdbutt.clicked.connect(self.fw_fwdbutt_clicked)
         midbox.addWidget(self.fw_fwdbutt)
                 
@@ -452,22 +452,22 @@ class FtcGuiApplication(TouchApplication):
         
         bottbox = QHBoxLayout()
         
-        self.fw_chrono = PicButton(QPixmap(icondir+"chronometer.png"))
+        self.fw_chrono = TouchAuxPicButton(QPixmap(icondir+"chronometer.png"))
         self.fw_chrono.clicked.connect(self.set_delay)
         bottbox.addWidget(self.fw_chrono)
         bottbox.addStretch()
         
         
-        fw_preturn = PicButton(QPixmap(icondir+"key-enter.png"))
+        fw_preturn = TouchAuxPicButton(QPixmap(icondir+"key-enter.png"))
         fw_preturn.clicked.connect(self.layer_show)
         bottbox.addWidget(fw_preturn)
         
-        self.fw_camera = PicButton(QPixmap(icondir+"camera-web-disabled.png"))
+        self.fw_camera = TouchAuxPicButton(QPixmap(icondir+"camera-web-disabled.png"))
         self.fw_camera.clicked.connect(self.foto)
         bottbox.addWidget(self.fw_camera)
         bottbox.addStretch()
         
-        self.fw_pfwd = PicButton(QPixmap(icondir+"go-next.png"))
+        self.fw_pfwd = TouchAuxPicButton(QPixmap(icondir+"go-next.png"))
         bottbox.addWidget(self.fw_pfwd)
         
         layout.addLayout(bottbox)
@@ -605,25 +605,25 @@ class FtcGuiApplication(TouchApplication):
         midbox = QHBoxLayout()
         midbox.addStretch()
         
-        self.sw_copy = PicButton(QPixmap(icondir+"edit-copy.png"))
+        self.sw_copy = TouchAuxPicButton(QPixmap(icondir+"edit-copy.png"))
         self.sw_copy.clicked.connect(self.sw_on_clicked_copy)
         midbox.addWidget(self.sw_copy)
         
         midbox.addStretch()
         
-        self.sw_move = PicButton(QPixmap(icondir+"edit-cut.png"))
+        self.sw_move = TouchAuxPicButton(QPixmap(icondir+"edit-cut.png"))
         self.sw_move.clicked.connect(self.sw_on_clicked_move)
         midbox.addWidget(self.sw_move)
         
         midbox.addStretch()
         
-        self.sw_renImage = PicButton(QPixmap(icondir+"edit-rename.png"))
+        self.sw_renImage = TouchAuxPicButton(QPixmap(icondir+"edit-rename.png"))
         self.sw_renImage.clicked.connect(self.sw_on_clicked_renImage)
         midbox.addWidget(self.sw_renImage)
         
         midbox.addStretch()
         
-        self.sw_delete = PicButton(QPixmap(icondir+"trash-empty.png"))
+        self.sw_delete = TouchAuxPicButton(QPixmap(icondir+"trash-empty.png"))
         self.sw_delete.clicked.connect(self.sw_on_clicked_del)
         midbox.addWidget(self.sw_delete)
         midbox.addStretch()
@@ -633,22 +633,22 @@ class FtcGuiApplication(TouchApplication):
         
         bottbox = QHBoxLayout()
         
-        self.sw_pback = PicButton(QPixmap(icondir+"go-previous.png"))
+        self.sw_pback = TouchAuxPicButton(QPixmap(icondir+"go-previous.png"))
         
         bottbox.addWidget(self.sw_pback)
         bottbox.addStretch()
         
         
-        sw_preturn = PicButton(QPixmap(icondir+"key-enter.png")) 
+        sw_preturn = TouchAuxPicButton(QPixmap(icondir+"key-enter.png")) 
         sw_preturn.clicked.connect(self.layer_show)
         bottbox.addWidget(sw_preturn)
         
-        self.sw_camera = PicButton(QPixmap(icondir+"camera-web-disabled.png")) 
+        self.sw_camera = TouchAuxPicButton(QPixmap(icondir+"camera-web-disabled.png")) 
         self.sw_camera.clicked.connect(self.foto)        
         bottbox.addWidget(self.sw_camera)
         bottbox.addStretch()
         
-        self.sw_pfwd = PicButton(QPixmap(icondir+"go-next.png"))
+        self.sw_pfwd = TouchAuxPicButton(QPixmap(icondir+"go-next.png"))
         bottbox.addWidget(self.sw_pfwd)
         self.sw_pfwd.clicked.connect(self.switch)
         self.sw_pback.clicked.connect(self.switchback)
@@ -762,7 +762,7 @@ class FtcGuiApplication(TouchApplication):
         labox.addWidget(lab)
         labox.addStretch()
         
-        self.tw_changeAlbum = PicButton(QPixmap(icondir+"folder-image-people.png"))
+        self.tw_changeAlbum = TouchAuxPicButton(QPixmap(icondir+"folder-image-people.png"))
         self.tw_changeAlbum.clicked.connect(self.selectalbum)
         labox.addWidget(self.tw_changeAlbum)
         layout.addLayout(labox)
@@ -779,19 +779,19 @@ class FtcGuiApplication(TouchApplication):
         
         midbox.addStretch()
         
-        tw_addAlbum = PicButton(QPixmap(icondir+"folder-add.png"))
+        tw_addAlbum = TouchAuxPicButton(QPixmap(icondir+"folder-add.png"))
         tw_addAlbum.clicked.connect(self.addAlbum)
         midbox.addWidget(tw_addAlbum)
 
         midbox.addStretch()
         
-        tw_delAlbum = PicButton(QPixmap(icondir+"folder-del.png"))
+        tw_delAlbum = TouchAuxPicButton(QPixmap(icondir+"folder-del.png"))
         tw_delAlbum.clicked.connect(self.delAlbum)
         midbox.addWidget(tw_delAlbum)
         
         midbox.addStretch()
         
-        tw_renAlbum = PicButton(QPixmap(icondir+"edit-rename.png"))
+        tw_renAlbum = TouchAuxPicButton(QPixmap(icondir+"edit-rename.png"))
         tw_renAlbum.clicked.connect(self.renAlbum)
         midbox.addWidget(tw_renAlbum)
         
@@ -802,22 +802,22 @@ class FtcGuiApplication(TouchApplication):
         
         bottbox = QHBoxLayout()
         
-        self.tw_pback = PicButton(QPixmap(icondir+"go-previous.png"))
+        self.tw_pback = TouchAuxPicButton(QPixmap(icondir+"go-previous.png"))
         self.tw_pback.clicked.connect(self.switchback)
         bottbox.addWidget(self.tw_pback)
         bottbox.addStretch()
         
         
-        tw_preturn = PicButton(QPixmap(icondir+"key-enter.png")) 
+        tw_preturn = TouchAuxPicButton(QPixmap(icondir+"key-enter.png")) 
         tw_preturn.clicked.connect(self.layer_show)
         bottbox.addWidget(tw_preturn)
         
-        self.tw_camera = PicButton(QPixmap(icondir+"camera-web-disabled.png"))
+        self.tw_camera = TouchAuxPicButton(QPixmap(icondir+"camera-web-disabled.png"))
         self.tw_camera.clicked.connect(self.foto)
         bottbox.addWidget(self.tw_camera)
         bottbox.addStretch()
         
-        self.tw_wizard = PicButton(QPixmap(icondir+"tools-wizard.png"))
+        self.tw_wizard = TouchAuxPicButton(QPixmap(icondir+"tools-wizard.png"))
         bottbox.addWidget(self.tw_wizard)
         self.tw_wizard.clicked.connect(self.on_wizard_clicked)
         
