@@ -44,7 +44,10 @@ class FtcGuiApplication(TouchApplication):
         
         self.window = TouchWindow("TXTShow")
         
-        if self.window.width()>self.window.height(): # Hilfe, Querformat...
+        self.width=self.window.width()
+        self.height=self.window.height()
+        
+        if self.width>self.height: # Hilfe, Querformat...
             msgbox = TouchMessageBox("Info",self.window)
             msgbox.setText(QCoreApplication.translate("startup","TXTShow only runs in portrait screen orientation."))
             msgbox.setPosButton("Okay")
@@ -107,25 +110,25 @@ class FtcGuiApplication(TouchApplication):
         if (self.currpixmap.size().width()>self.currpixmap.size().height()) and self.autorotate:
             self.currpixmap = self.currpixmap.transformed(QTransform().rotate(270))
         
-        if self.currpixmap.width()>240 or self.currpixmap.height()>320:
+        if self.currpixmap.width()>self.width or self.currpixmap.height()>self.height:
             self.allowZoom=True
         else:
             self.allowZoom=False
         
         if self.autoscale or (not self.allowZoom):
-            self.layer_picture.setPixmap(self.currpixmap.scaled(QSize(240, 320), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            self.layer_picture.setPixmap(self.currpixmap.scaled(QSize(self.width, self.height), Qt.KeepAspectRatio, Qt.SmoothTransformation))
         else:
             self.paint_zoom()
         self.updatelayerimage()
         
     def paint_zoom(self):
         if not self.allowZoom: return()
-        base_x = (self.currpixmap.width()/2)-120
-        base_y = (self.currpixmap.height()/2)-160
-        target=QPixmap(240,320)
+        base_x = (self.currpixmap.width()/2)-(self.width/2)
+        base_y = (self.currpixmap.height()/2)-(self.height/2)
+        target=QPixmap(self.width,self.height)
         p = QPainter()
         p.begin(target)
-        p.drawPixmap(0,0,240,320,self.currpixmap,base_x+self.offset_x,base_y+self.offset_y,240,320)
+        p.drawPixmap(0,0,self.width,self.height,self.currpixmap,base_x+self.offset_x,base_y+self.offset_y,self.width,self.height)
         p.end()
         self.layer_picture.setPixmap(target)
     
@@ -249,17 +252,17 @@ class FtcGuiApplication(TouchApplication):
         self.window.setCentralWidget(self.myStack)
 
         self.layer_black = QLabel(self.window)
-        self.layer_black.setGeometry(0, 0, 240, 320)
-        self.layer_black.setPixmap(QPixmap(ovldir+"ovl_black.png"))
+        self.layer_black.setGeometry(0, 0, self.width, self.height)
+        self.layer_black.setPixmap(QPixmap(ovldir+"ovl_black.png").scaled(QSize(self.width, self.height), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
 
         self.layer_picture = QLabel(self.window)
-        self.layer_picture.setGeometry(0, 0, 240, 320)
+        self.layer_picture.setGeometry(0, 0, self.width, self.height)
         self.layer_picture.mousePressEvent=self.on_picture_clicked
         self.layer_picture.setAlignment(Qt.AlignCenter)
         
         self.layer_overlay = QLabel(self.window)
-        self.layer_overlay.setGeometry(0, 0, 240, 320)
-        self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_pause.png"))
+        self.layer_overlay.setGeometry(0, 0, self.width, self.height)
+        self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_pause.png").scaled(QSize(self.width, self.height), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
         self.layer_overlay.mousePressEvent=self.on_ovl_clicked
 
         self.layer_overlay.hide()
@@ -267,35 +270,46 @@ class FtcGuiApplication(TouchApplication):
     def toggle_timer(self):
         if self.timer.isActive():
             self.timer.stop()
-            if self.autoscale: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_play.png"))
-            else: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_play_zoom.png"))
+            if self.autoscale: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_play.png").scaled(QSize(self.width, self.height), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
+            else: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_play_zoom.png").scaled(QSize(self.width, self.height), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
         else:
             self.timer.start(self.timerdelay)
-            if self.autoscale: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_pause.png"))
-            else: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_pause_zoom.png"))
+            if self.autoscale: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_pause.png").scaled(QSize(self.width, self.height), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
+            else: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_pause_zoom.png").scaled(QSize(self.width, self.height), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
     
     def toggle_autoscale(self):
         self.autoscale=not self.autoscale
         #if not self.allowZoom: self.autoscale=True
         if self.timer.isActive():
-            if self.autoscale: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_pause.png"))
-            else: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_pause_zoom.png"))
+            if self.autoscale: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_pause.png").scaled(QSize(self.width, self.height), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
+            else: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_pause_zoom.png").scaled(QSize(self.width, self.height), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
         else:
-            if self.autoscale: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_play.png"))
-            else: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_play_zoom.png"))
+            if self.autoscale: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_play.png").scaled(QSize(self.width, self.height), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
+            else: self.layer_overlay.setPixmap(QPixmap(ovldir+"ovl_play_zoom.png").scaled(QSize(self.width, self.height), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
             
     def on_picture_clicked(self,event):
         x = event.pos().x()
         y = event.pos().y()
         
-        if x<48: column="left"
-        elif x>191: column="right"
-        elif x>95 and x<145: column="middle"
+        lm = 0.2*self.width
+        lmm = (self.width-lm)/2
+        rmm = (self.width+lm)/2
+        rm = self.width - lm
+        
+        tm = 0.2*self.height
+        tmm = (self.height-lm)/2
+        bmm = (self.height+lm)/2
+        bm = self.height - lm
+        
+        
+        if x<lm: column="left"
+        elif x>rm: column="right"
+        elif x>lmm and x<rmm: column="middle"
         else: column="empty"
         
-        if y<48: row="top"
-        elif y>272: row="bottom"
-        elif y>135 and y<185: row="middle"
+        if y<tm: row="top"
+        elif y>bm: row="bottom"
+        elif y>tmm and y<bmm: row="middle"
         else: row="empty"
         
         if self.autoscale:
@@ -323,14 +337,24 @@ class FtcGuiApplication(TouchApplication):
         x = event.pos().x()
         y = event.pos().y()
         
-        if x<48: column="left"
-        elif x>191: column="right"
-        elif x>95 and x<145: column="middle"
+        lm = 0.2*self.width
+        lmm = (self.width-lm)/2
+        rmm = (self.width+lm)/2
+        rm = self.width - lm
+        
+        tm = 0.2*self.height
+        tmm = (self.height-lm)/2
+        bmm = (self.height+lm)/2
+        bm = self.height - lm
+        
+        if x<lm: column="left"
+        elif x>rm: column="right"
+        elif x>lmm and x<rmm: column="middle"
         else: column="empty"
         
-        if y<48: row="top"
-        elif y>272: row="bottom"
-        elif y>135 and y<185: row="middle"
+        if y<tm: row="top"
+        elif y>bm: row="bottom"
+        elif y>tmm and y<bmm: row="middle"
         else: row="empty"
         
         if self.autoscale:  #bei automatischer größenanpassung
@@ -367,16 +391,16 @@ class FtcGuiApplication(TouchApplication):
             elif row=="middle" and column=="middle":
                 row="empty"
             elif row=="middle" and column=="left":
-                self.offset_x=max(0-(self.currpixmap.width()/2)+120,self.offset_x-64)
+                self.offset_x=max(0-(self.currpixmap.width()/2)+(self.width/2),self.offset_x-64)
                 self.paint_zoom()
             elif row=="middle" and column=="right":
-                self.offset_x=min((self.currpixmap.width()/2)-120,self.offset_x+64)
+                self.offset_x=min((self.currpixmap.width()/2)-(self.width/2),self.offset_x+64)
                 self.paint_zoom()
             elif row=="top" and column=="middle":
-                self.offset_y=max(0-(self.currpixmap.height()/2)+160,self.offset_y-64)
+                self.offset_y=max(0-(self.currpixmap.height()/2)+(self.height/2),self.offset_y-64)
                 self.paint_zoom()
             elif row=="bottom" and column=="middle":
-                self.offset_y=min((self.currpixmap.height()/2)-160,self.offset_y+64)
+                self.offset_y=min((self.currpixmap.height()/2)-(self.height/2),self.offset_y+64)
                 self.paint_zoom()
             elif row=="top" and column=="right":
                 row="empty"
